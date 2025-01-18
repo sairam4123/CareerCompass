@@ -1,16 +1,20 @@
 {
   "builds": [
     {
+      "src": "server/main.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
+    },
+    {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "frontend/dist"
       }
-    },
-    {
-      "src": "server/main.py",
-      "use": "@vercel/python"
     }
+    
   ],
   "routes": [
     {
@@ -23,5 +27,6 @@
     }
   ],
   "installCommand": "pip install poetry && poetry install",
-  "buildCommand": "poetry export -f requirements.txt --output server/requirements.txt --without-hashes && cd frontend && npm install && npm run build"
+  "buildCommand": "poetry export -f requirements.txt --output server/requirements.txt --without-hashes && cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist"
 }

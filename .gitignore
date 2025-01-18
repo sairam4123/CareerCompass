@@ -26,3 +26,4 @@ dist-ssr
 
 log.json
 *.env
+.vercel

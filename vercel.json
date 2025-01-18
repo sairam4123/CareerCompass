@@ -1,24 +1,27 @@
 {
-    "builds": [
-      {
-        "src": "server/main.py",
-        "use": "@vercel/python"
-      },
-      {
-        "src": "frontend/package.json",
-        "use": "@vercel/static-build",
-        "config": { "distDir": "frontend/dist" }
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "frontend/dist"
       }
-    ],
-    "routes": [
-      {
-        "src": "/api/(.*)",
-        "dest": "server/main.py"
-      },
-      {
-        "src": "/(.*)",
-        "dest": "frontend/dist/index.html"
-      }
-    ]
-  }
-  
+    },
+    {
+      "src": "server/main.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "server/main.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/dist/$1"
+    }
+  ],
+  "installCommand": "pip install poetry && poetry install",
+  "buildCommand": "poetry export -f requirements.txt --output server/requirements.txt --without-hashes && cd frontend && npm install && npm run build"
+}

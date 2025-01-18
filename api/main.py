@@ -143,7 +143,7 @@ try:
 except FileNotFoundError:
     pass
 
-app = fastapi.FastAPI()
+app = fastapi.FastAPI(root_path="/api")
 
 origins = [
     "http://localhost",

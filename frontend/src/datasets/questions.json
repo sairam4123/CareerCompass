@@ -1,0 +1,73 @@
+[
+    {
+        "id": "a9383bf8-522c-4898-bbf2-b84da5a99716",
+        "question": 1,
+        "title": "What is your age-group?",
+        "choices": [
+            {
+                "id": "67ad0e38-d987-41e5-84ad-b1f1ffe429a8",
+                "choice": 1,
+                "label": "18-24"
+            },
+            {
+                "id": "ad5c85e4-8efb-4093-a9b6-6dff3b1dffef",
+                "choice": 2,
+                "label": "25-36"
+            },
+            {
+                "id": "b1f1ffe4-29a8-41e5-84ad-67ad0e38-d987",
+                "choice": 3,
+                "label": "37-50"
+            },
+            {
+                "id": "c3c43b39-9990-452f-a0c0-9b433837-aab3",
+                "choice": 4,
+                "label": "51-65"
+            }
+        ]
+    },
+    {
+        "id": "9b433837-aab3-452f-a0c0-c3c43b399990",
+        "question": 2,
+        "title": "What is your gender?",
+        "choices": [
+            {
+                "id": "c136ac7e-82c0-4dda-9611-40f1c02930fd",
+                "choice": 1,
+                "label": "Male"
+            },
+            {
+                "id": "b71894dd-7561-42c6-8aa8-682eecef6a7a",
+                "choice": 2,
+                "label": "Female"
+            }
+        ]
+    },
+    {
+        "id": "c740c764-ddbc-4b25-90ee-cf70ebe698e5",
+        "question": 3,
+        "title": "What is your highest level of education?",
+        "choices": [
+            {
+                "id": "3385e1d4-2683-4f5a-8e26-9e9fa7d47183",
+                "choice": 1,
+                "label": "Masters"
+            },
+            {
+                "id": "71c4348b-0b7d-410a-961a-834f74b6ad25",
+                "choice": 2,
+                "label": "Bachelors"
+            },
+            {
+                "id": "ac8b342c-5413-4c12-a40e-e577e95fa3a0",
+                "choice": 3,
+                "label": "12th"
+            },
+            {
+                "id": "a515e7bf-9e25-4edc-8004-734794a829fb",
+                "choice": 4,
+                "label": "10th"
+            }
+        ]
+    }
+]

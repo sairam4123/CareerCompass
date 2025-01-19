@@ -168,6 +168,7 @@ async def post_basic_answers(basic_answer: BasicAnswers, prisma: 'Prisma' = fast
     completion = chatbot.generate_content(prompt + "\n" + str(basic_answer))
     if not completion or not completion.candidates or not completion.candidates[0].content.parts:
         return {"success": False, "message": "Failed to generate content."}
+    print("Generated content...")
     questions: list[dict] = json.loads(completion.candidates[0].content.parts[0].text)
     if not questions:
         return {"success": False, "message": "Question failed to generate."}
@@ -191,8 +192,10 @@ async def post_answer(user_id: uuid.UUID, choice: Choice, prisma: 'Prisma' = fas
     user = await prisma.profile.find_unique(where={"userId": str(user_id)}, include={"answers": {"include": {"choice": True, "question": True}, "order_by": [{"createdAt": "asc"}]},})
     if not user:
         return {"success": False, "message": "User not found."}
-    
-    q_with_answers = [f"{answer.question.title}\n{answer.choice.label}" for answer in user.answers or [] if answer.question and answer.choice]
+    if not user.answers:
+        return {"success": False, "message": "No answers found."}
+
+    q_with_answers = [f"{answer.question.title}\n{answer.choice.label}" for answer in user.answers if answer.question and answer.choice]
     basic_answers = f"Age Group: {user.ageGroup}\nGender: {user.gender}\nEducation: {user.education}"
     last_question = await prisma.question.find_unique(where={"id": choice.question_id})
     if not last_question:
@@ -218,10 +221,12 @@ async def get_result(user_id: uuid.UUID, prisma: 'Prisma' = fastapi.Depends(db))
     if results:
         return {"success": True, 'userId': user_id, 'results': results}
     user = await prisma.profile.find_unique(where={"userId": str(user_id)}, include={"answers": {"include": {"choice": True, "question": True}, "order_by": [{"createdAt": "asc"}]},})
+    
     if not user:
         return {"success": False, "message": "User not found."}
     if not user.answers:
         return {"success": False, "message": "No answers found."}
+    
     q_with_answers = [f"{answer.question.title}\n{answer.choice.label}" for answer in user.answers if answer.question and answer.choice]
     last_question = await prisma.question.find_unique(where={"id": user.answers[-1].questionId})
     if not last_question:

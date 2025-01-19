@@ -66,7 +66,7 @@ export default function Result({ userId: defaultUserId }: { userId?: string | nu
             Please consult with a career counselor for more accurate results.
         </p>)}
         {/* {data && userId && (<ResultsTable results={data.results} />)} */}
-        {userId && (<div className="flex gap-4 mt-4">
+        {userId && (<div className={`${loading && "opacity-0"} flex-1 flex flex-row w-full transition-all items-center justify-center gap-8 mt-4`}>
           <Button icon={<MdAutorenew />} text="Start Over" onClick={() => navigate("/")} />
             <Button icon={<MdShare />} text="Share" onClick={() => {
               navigator.clipboard.writeText(`${window.location.origin}/result/${userId}`); 

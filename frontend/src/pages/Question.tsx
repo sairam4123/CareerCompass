@@ -40,7 +40,7 @@ export default function Question({
         <h1 className="flex min-w-full md:min-w-fit max-h-fit text-left justify-items-stretch md:text-center font-bold text-6xl">
           Question {question.question}
         </h1>
-        <p className="flex text-left md:text-center font-semibold text-lg">{question.title}</p>
+        <p className="flex text-left md:text-center min-w-full md:min-w-fit max-h-fit font-semibold text-lg">{question.title}</p>
         <Progress value={question.question} maxValue={maxQuestions} key="question-progress" className="w-full md:w-3/4 lg:w-2/3 xl:w-1/2 transition-all"></Progress>
         <div className="flex flex-col items-center justify-center transition-all w-full md:w-3/4 lg:w-2/3 xl:w-1/2 min-w-fit h-fit mt-4 gap-2">
           {question.choices.map((choice, index) => (

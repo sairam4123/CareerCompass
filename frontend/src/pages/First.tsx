@@ -8,7 +8,7 @@ export function First({onBegin}: {onBegin: () => void}) {
           Welcome to CareerCompass!
         </h1>
         <p className="text-center text-2xl">
-          Your personalized carrer path starts here.
+          Your personalized career path starts here.
         </p>
         <Button
           onClick={onBegin}

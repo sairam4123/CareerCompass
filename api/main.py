@@ -162,10 +162,8 @@ app.add_middleware(
 
 @app.post("/answers")
 async def post_basic_answers(basic_answer: BasicAnswers, prisma: 'Prisma' = fastapi.Depends(db)):
-
     profile = await prisma.profile.create(data={"ageGroup": basic_answer.age_group, "gender": basic_answer.gender, "education": basic_answer.education})
     completion = chatbot.generate_content(prompt + "\n" + str(basic_answer))
-    print("Generated question...")
     questions: list[dict] = json.loads(completion.candidates[0].content.parts[0].text)
     if not questions:
         return {"success": False, "message": "Question failed to generate."}
@@ -176,7 +174,6 @@ async def post_basic_answers(basic_answer: BasicAnswers, prisma: 'Prisma' = fast
         "question": questions[0]['question'], 
         "title": questions[0]['title'], 
         "choices": {"create": [{"choice": int(choice['choice']), "label": choice['label']} for choice in questions[0]['choices']]}},  include={"choices": True})
-    print("Created question...", question.id)
     question = Question(**question.model_dump())
 
     return {"success": True, 'max_questions': max_questions, 'userId': profile.userId, 'question': question}

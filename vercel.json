@@ -5,7 +5,7 @@
       "runtime": "@vercel/python@4.6.0",
       "maxDuration": 60,
       "memory": 256,
-      "includeFiles": "prisma/types/*"
+      "includeFiles": "_prisma/_types/*"
     }
   },
   "devCommand": "cd frontend && yarn dev",

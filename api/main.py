@@ -13,8 +13,8 @@ if TYPE_CHECKING:
     from prisma import Prisma
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from prisma.types import Prisma # type: ignore
+print(sys.path)
+from _prisma._types import Prisma
 
 async def db():
     prisma = Prisma()

@@ -5,8 +5,13 @@ import useFetch from "../lib/useFetch";
 import CircularProgress from "../components/CircularProgress";
 import { ResultType } from "../@types/Result";
 import useWindowSize from "../lib/useWindowSize";
+import { useNavigate, useParams } from "react-router";
+import Button from "../components/Button";
 
-export default function Result({ userId }: { userId?: string | null }) {
+export default function Result({ userId: defaultUserId }: { userId?: string | null }) {
+  const { userId: paramUserId } = useParams();
+  const navigate = useNavigate();
+  const userId = defaultUserId ?? paramUserId;
   const { loading, error, data } = useFetch<{ results: ResultType[] }>(
     `${api}/result/${userId}`,
     { enabled: !!userId }
@@ -59,6 +64,7 @@ export default function Result({ userId }: { userId?: string | null }) {
             Please consult with a career counselor for more accurate results.
         </p>)}
         {/* {data && userId && (<ResultsTable results={data.results} />)} */}
+        {userId && (<Button text="Start Over" onClick={() => navigate("/")} className="mt-4" />)}
       </section>
     </main>
   );

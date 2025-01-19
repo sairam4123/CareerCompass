@@ -9,6 +9,7 @@ import { api } from "./lib/api";
 import useMutation from "./lib/useMutation";
 import { BasicAnswersType, QuestionType } from "./@types/Question";
 import { ChoiceType } from "./@types/Choice";
+import { useNavigate } from "react-router";
 
 type AppStateType = "BEGIN" | "QUESTIONNAIRE" | "AI_QUESTIONNAIRE" | "DONE";
 
@@ -30,6 +31,7 @@ function App() {
   const [curQuestion, setCurQuestion] = useState<number>(0);
   const [question, setQuestion] = useState<QuestionType>(questions[0]);
   const [maxQuestions, setMaxQuestions] = useState<number>(questions.length);
+  const navigate = useNavigate();
 
   const [userId, setUserId] = useState<string>(""); // User ID for AI questionnaire
 
@@ -47,6 +49,7 @@ function App() {
       setUserId(userId);
     },
   });
+  
 
   const nextQuestionMutation = useMutation<
     { question: QuestionType },
@@ -62,7 +65,6 @@ function App() {
   return (
     <>
       <NavBar />
-
       {appState === "BEGIN" && (
         <First onBegin={() => setAppState("QUESTIONNAIRE")} />
       )}
@@ -99,7 +101,7 @@ function App() {
           }}
         ></Question>
       )}
-      {appState === "DONE" && <Result userId={userId}></Result>}
+      {appState === "DONE" && <Result />}
       {appState === "AI_QUESTIONNAIRE" && (
         <Question
           disablePrev={true}
@@ -118,6 +120,7 @@ function App() {
             ]);
             if (question.question === maxQuestions) {
               setAppState("DONE");
+              navigate(`/result/${userId}`);  
               return;
             }
             nextQuestionMutation.mutate({

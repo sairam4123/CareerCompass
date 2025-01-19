@@ -1,18 +1,19 @@
 from dotenv import load_dotenv
 load_dotenv()
 import os
-import google.generativeai as genai
 import uuid
 import json
 
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import google.generativeai as genai
 import fastapi
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from prisma import Prisma
-import sys, os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from _prisma._types import Prisma
 
 async def db():
@@ -20,7 +21,7 @@ async def db():
     await prisma.connect()
     return prisma
 
-genai.configure(api_key=os.getenv("API_KEY"))
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 class BasicAnswers(BaseModel):
     age_group: str

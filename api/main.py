@@ -63,6 +63,7 @@ class Result(BaseModel):
     def __str__(self):
         return f"Result: {self.result}\nPoints: {self.points}"
 
+print("Loading model...")
 chatbot = genai.GenerativeModel('gemini-1.5-flash', generation_config={"response_mime_type": "application/json"})
 
 class Profile(BaseModel):
@@ -158,10 +159,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+print("Model loaded.")
 
 @app.post("/answers")
 async def post_basic_answers(basic_answer: BasicAnswers, prisma: 'Prisma' = fastapi.Depends(db)):
+    print("Creating profile...", str(basic_answer))
     profile = await prisma.profile.create(data={"ageGroup": basic_answer.age_group, "gender": basic_answer.gender, "education": basic_answer.education})
     completion = chatbot.generate_content(prompt + "\n" + str(basic_answer))
     if not completion or not completion.candidates or not completion.candidates[0].content.parts:
@@ -182,6 +184,7 @@ async def post_basic_answers(basic_answer: BasicAnswers, prisma: 'Prisma' = fast
 
 @app.post("/answers/{user_id}")
 async def post_answer(user_id: uuid.UUID, choice: Choice, prisma: 'Prisma' = fastapi.Depends(db)):
+    print("Creating answer...", str(choice))
     await prisma.answer.create(data={"profileId": str(user_id), "choiceId": str(choice.id), "questionId": str(choice.question_id)})
     
     # get new question

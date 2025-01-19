@@ -1,15 +1,15 @@
 {
   "version": 2,
   "functions": {
-    "api/*.py": {
+    "api/main.py": {
       "runtime": "@vercel/python@4.6.0",
       "maxDuration": 10,
       "memory": 256,
-      "includeFiles": "api/**"
+      "includeFiles": "**/*.py"
     }
   },
   "devCommand": "cd frontend && yarn dev",
-  "installCommand": "cd frontend && yarn install && cd ../api && ",
+  "installCommand": "cd frontend && yarn install",
   "buildCommand": "cd frontend && yarn run build",
   "rewrites": [
     {

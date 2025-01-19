@@ -6,6 +6,7 @@ datasource db {
 
 generator client {
     provider = "prisma-client-py"
+    output = "../prisma/types"
 }
 
 model Question {
@@ -52,7 +53,7 @@ model Profile {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
     maxQuestion Int?
-    
+
     answers Answer[]
     results Result[]
 }

@@ -11,7 +11,13 @@ from pydantic import BaseModel, Field
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from prisma import Prisma
-from db import db
+
+from prisma import Prisma
+
+async def db():
+    prisma = Prisma()
+    await prisma.connect()
+    return prisma
 
 genai.configure(api_key=os.getenv("API_KEY"))
 

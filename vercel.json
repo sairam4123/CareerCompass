@@ -3,9 +3,9 @@
   "functions": {
     "api/main.py": {
       "runtime": "@vercel/python@4.6.0",
-      "maxDuration": 10,
+      "maxDuration": 60,
       "memory": 256,
-      "includeFiles": "**/*.py"
+      "includeFiles": "prisma/types/*"
     }
   },
   "devCommand": "cd frontend && yarn dev",

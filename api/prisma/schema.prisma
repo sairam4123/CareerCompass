@@ -6,7 +6,7 @@ datasource db {
 
 generator client {
     provider = "prisma-client-py"
-    output = "../prisma/types"
+    output = "../../prisma/types"
 }
 
 model Question {

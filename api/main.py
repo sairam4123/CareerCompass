@@ -11,8 +11,10 @@ from pydantic import BaseModel, Field
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from prisma import Prisma
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from prisma import Prisma
+from prisma.types import Prisma # type: ignore
 
 async def db():
     prisma = Prisma()

@@ -17,9 +17,14 @@
       "destination": "/api/main.py"
     },
     {
-      "source": "/(.*)",
-      "destination": "/frontend/dist/"
+      "source": "/about",
+      "destination": "/frontend/dist/index.html"
+    },
+    {
+      "source": "/result/(.*)",
+      "destination": "/frontend/dist/index.html"
     }
   ],
+  "trailingSlash": false,
   "outputDirectory": "frontend/dist"
 }

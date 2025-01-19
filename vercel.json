@@ -17,12 +17,8 @@
       "destination": "/api/main.py"
     },
     {
-      "source": "/about",
-      "destination": "/frontend/dist/index.html"
-    },
-    {
-      "source": "/result/(.*)",
-      "destination": "/frontend/dist/index.html"
+      "source": "/(.*)",
+      "destination": "/"
     }
   ],
   "trailingSlash": false,

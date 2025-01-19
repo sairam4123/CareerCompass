@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from prisma import Prisma
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-print(sys.path)
 from _prisma._types import Prisma
 
 async def db():
@@ -173,13 +172,11 @@ async def post_basic_answers(basic_answer: BasicAnswers, prisma: 'Prisma' = fast
     
     max_questions = questions[0].get('max_questions', 10)
     await prisma.profile.update(where={"userId": profile.userId}, data={"maxQuestion": max_questions})
-    print(questions, questions[0]['choices'])
     question = await prisma.question.create(data={
         "question": questions[0]['question'], 
         "title": questions[0]['title'], 
         "choices": {"create": [{"choice": int(choice['choice']), "label": choice['label']} for choice in questions[0]['choices']]}},  include={"choices": True})
-    print("Created question...")
-    print(question.model_dump())
+    print("Created question...", question.id)
     question = Question(**question.model_dump())
 
     return {"success": True, 'max_questions': max_questions, 'userId': profile.userId, 'question': question}

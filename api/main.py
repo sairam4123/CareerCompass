@@ -63,7 +63,6 @@ class Result(BaseModel):
     def __str__(self):
         return f"Result: {self.result}\nPoints: {self.points}"
 
-users: dict[str, 'Profile'] = {}
 chatbot = genai.GenerativeModel('gemini-1.5-flash', generation_config={"response_mime_type": "application/json"})
 
 class Profile(BaseModel):
@@ -165,6 +164,8 @@ app.add_middleware(
 async def post_basic_answers(basic_answer: BasicAnswers, prisma: 'Prisma' = fastapi.Depends(db)):
     profile = await prisma.profile.create(data={"ageGroup": basic_answer.age_group, "gender": basic_answer.gender, "education": basic_answer.education})
     completion = chatbot.generate_content(prompt + "\n" + str(basic_answer))
+    if not completion or not completion.candidates or not completion.candidates[0].content.parts:
+        return {"success": False, "message": "Failed to generate content."}
     questions: list[dict] = json.loads(completion.candidates[0].content.parts[0].text)
     if not questions:
         return {"success": False, "message": "Question failed to generate."}
@@ -194,6 +195,8 @@ async def post_answer(user_id: uuid.UUID, choice: Choice, prisma: 'Prisma' = fas
     if not last_question:
         return {"success": False, "message": "Last question not found."}
     completion = chatbot.generate_content(prompt + "\n" + basic_answers + '\nList of Questions and answered so far:' + '\n'.join(q_with_answers) + f'\nLast Question: ({last_question.question}/{user.maxQuestion} max)')
+    if not completion or not completion.candidates or not completion.candidates[0].content.parts:
+        return {"success": False, "message": "Failed to generate content."}
     questions = json.loads(completion.candidates[0].content.parts[0].text)
     if not questions:
         return {"success": False, "message": "Question failed to generate."}
@@ -222,6 +225,8 @@ async def get_result(user_id: uuid.UUID, prisma: 'Prisma' = fastapi.Depends(db))
         return {"success": False, "message": "Last question not found."}
     basic_answers = f"Age Group: {user.ageGroup}\nGender{user.gender}\nEducation: {user.education}"
     completion = chatbot.generate_content(result_prompt + "\n" + basic_answers + '\nList of Questions and answered so far:' + '\n'.join(q_with_answers) + f'\n({last_question.question}/10)')
+    if not completion or not completion.candidates or not completion.candidates[0].content.parts:
+        return {"success": False, "message": "Failed to generate content."}
     results = json.loads(completion.candidates[0].content.parts[0].text)
     await prisma.result.create_many(data=[{"result": result['result'], "points": int(result['points']), "advantages": result['advantages'], "disadvantages": result['disadvantages'], "match_description": result['match_description'], "description": result['description'], "userId": str(user_id)} for result in results])
 

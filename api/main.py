@@ -150,7 +150,7 @@ You MUST provide atleast 2 results and atmost 4 results. Generate 3 results for 
 
 
 
-app = fastapi.FastAPI(root_path="/api")
+app = fastapi.FastAPI(root_path="/api", debug=True)
 
 app.add_middleware(
     CORSMiddleware,

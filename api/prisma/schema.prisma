@@ -1,0 +1,75 @@
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL")
+}
+
+generator client {
+    provider = "prisma-client-py"
+}
+
+model Question {
+    id        String      @db.Uuid() @id @default(uuid())
+    question  Int
+    title     String
+    choices   Choice[]
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    answers Answer[]
+}
+
+model Choice {
+    id        String    @db.Uuid()   @id @default(uuid())
+    choice    Int
+    label      String
+    questionId String  @db.Uuid()
+    question  Question  @relation(fields: [questionId], references: [id])
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    pickedAnswers Answer[]
+}
+
+model Answer {
+    id        String    @db.Uuid()   @id @default(uuid())
+    question  Question  @relation(fields: [questionId], references: [id])
+    questionId String @db.Uuid()
+    choice    Choice    @relation(fields: [choiceId], references: [id])
+    choiceId  String @db.Uuid()
+    profile   Profile   @relation(fields: [profileId], references: [userId])
+    profileId String @db.Uuid()
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+
+model Profile {
+    userId    String   @db.Uuid()    @id @default(uuid())
+    ageGroup  String
+    education String
+    gender    String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    maxQuestion Int?
+    
+    answers Answer[]
+    results Result[]
+}
+
+model Result {
+    id        String    @db.Uuid()   @id @default(uuid())
+    userId    String   @db.Uuid()
+    profile   Profile   @relation(fields: [userId], references: [userId])
+
+    result     String
+    points     Int
+    description String
+    match_description String
+    advantages String[]
+    disadvantages String[]
+    tags String[]
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}

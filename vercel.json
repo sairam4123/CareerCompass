@@ -5,9 +5,12 @@
       "runtime": "@vercel/python@4.6.0",
       "maxDuration": 10,
       "memory": 256,
-      "includeFiles": "server/**"
+      "includeFiles": "api/**"
     }
   },
+  "devCommand": "cd frontend && yarn dev",
+  "installCommand": "cd frontend && yarn install",
+  "buildCommand": "cd frontend && yarn run build",
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -17,5 +20,6 @@
       "source": "/(.*)",
       "destination": "/frontend/dist/$1"
     }
-  ]
+  ],
+  "outputDirectory": "frontend/dist"
 }

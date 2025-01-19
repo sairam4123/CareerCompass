@@ -8,6 +8,10 @@ import json
 import fastapi
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from prisma import Prisma
+from db import db
 
 genai.configure(api_key=os.getenv("API_KEY"))
 
@@ -24,6 +28,7 @@ class Choice(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
     choice: int
     label: str
+    question_id: str = Field(alias="questionId")
 
     def __str__(self):
         return f"Choice Label: {self.label}"
@@ -50,10 +55,10 @@ class Result(BaseModel):
     def __str__(self):
         return f"Result: {self.result}\nPoints: {self.points}"
 
-users: dict[str, 'User'] = {}
+users: dict[str, 'Profile'] = {}
 chatbot = genai.GenerativeModel('gemini-1.5-flash', generation_config={"response_mime_type": "application/json"})
 
-class User(BaseModel):
+class Profile(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
     basic_answers: BasicAnswers
     questions: list[Question]
@@ -135,24 +140,13 @@ RESULT SCHEMA:
 You MUST provide atleast 2 results and atmost 4 results. Generate 3 results for optimal performance.
 """
 
-# Load users from logs.json
-try:
-    with open("log.json", "r") as f:
-        users = {uuid.UUID(k): User(**v) for k, v in json.loads(f.read()).items()}
 
-except FileNotFoundError:
-    pass
 
 app = fastapi.FastAPI(root_path="/api")
 
-origins = [
-    "http://localhost",
-    "http://localhost:5173",
-    "http://localhost:3000",
-]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -160,51 +154,72 @@ app.add_middleware(
 
 
 @app.post("/answers")
-def post_basic_answers(basic_answer: BasicAnswers):
+async def post_basic_answers(basic_answer: BasicAnswers, prisma: 'Prisma' = fastapi.Depends(db)):
 
-    user = User(id=uuid.uuid4(), basic_answers=basic_answer, questions=[], answers=[], results=[])
-    users[user.id] = user
+    profile = await prisma.profile.create(data={"ageGroup": basic_answer.age_group, "gender": basic_answer.gender, "education": basic_answer.education})
     completion = chatbot.generate_content(prompt + "\n" + str(basic_answer))
-    print(completion.candidates[0].content.parts[0].text)
-    questions = json.loads(completion.candidates[0].content.parts[0].text)
-    user.max_questions = questions[0]['max_questions']
-    question = {**questions[0], 'choices': [Choice(**choice) for choice in questions[0]['choices']] }
-    question = Question(**question)
-    user.questions.append(question)
+    print("Generated question...")
+    questions: list[dict] = json.loads(completion.candidates[0].content.parts[0].text)
+    if not questions:
+        return {"success": False, "message": "Question failed to generate."}
     
-    dump = {str(user.id): user.model_dump(mode='json') for user in users.values()}
-    with open("log.json", "w") as f:
-        f.write(json.dumps(dump) + '\n')
+    max_questions = questions[0].get('max_questions', 10)
+    await prisma.profile.update(where={"userId": profile.userId}, data={"maxQuestion": max_questions})
+    print(questions, questions[0]['choices'])
+    question = await prisma.question.create(data={
+        "question": questions[0]['question'], 
+        "title": questions[0]['title'], 
+        "choices": {"create": [{"choice": int(choice['choice']), "label": choice['label']} for choice in questions[0]['choices']]}},  include={"choices": True})
+    print("Created question...")
+    print(question.model_dump())
+    question = Question(**question.model_dump())
 
-    return {"success": True, 'max_questions': user.max_questions, 'userId': user.id, 'question': question}
+    return {"success": True, 'max_questions': max_questions, 'userId': profile.userId, 'question': question}
 
 @app.post("/answers/{user_id}")
-def post_answer(user_id: uuid.UUID, choice: Choice):
-    user: User = users[user_id]
-    user.answers.append(choice)
-    last_question = user.questions[-1]
-    q_with_answers = [str(q) + '\n' + str(a) for q, a in zip(user.questions, user.answers)]
-    print(q_with_answers)
-    completion = chatbot.generate_content(prompt + "\n" + str(user.basic_answers) + '\nList of Questions and answered so far:' + '\n'.join(q_with_answers) + f'\n({last_question.question}/10)')
-    questions = json.loads(completion.candidates[0].content.parts[0].text)
-    print(questions)
-    question = {**questions[0], 'choices': [Choice(**choice) for choice in questions[0]['choices']] }
-    question = Question(**question)
-    user.questions.append(question)
-    dump = {str(user.id): user.model_dump(mode='json') for user in users.values()}
-    with open("log.json", "w") as f:
-        f.write(json.dumps(dump) + '\n')
+async def post_answer(user_id: uuid.UUID, choice: Choice, prisma: 'Prisma' = fastapi.Depends(db)):
+    await prisma.answer.create(data={"profileId": str(user_id), "choiceId": str(choice.id), "questionId": str(choice.question_id)})
     
-    return {"success": True, 'userId': user.id, 'question': question}
+    # get new question
+    user = await prisma.profile.find_unique(where={"userId": str(user_id)}, include={"answers": {"include": {"choice": True, "question": True}, "order_by": [{"createdAt": "asc"}]},})
+    if not user:
+        return {"success": False, "message": "User not found."}
+    
+    q_with_answers = [f"{answer.question.title}\n{answer.choice.label}" for answer in user.answers or [] if answer.question and answer.choice]
+    basic_answers = f"Age Group: {user.ageGroup}\nGender: {user.gender}\nEducation: {user.education}"
+    last_question = await prisma.question.find_unique(where={"id": choice.question_id})
+    if not last_question:
+        return {"success": False, "message": "Last question not found."}
+    completion = chatbot.generate_content(prompt + "\n" + basic_answers + '\nList of Questions and answered so far:' + '\n'.join(q_with_answers) + f'\nLast Question: ({last_question.question}/{user.maxQuestion} max)')
+    questions = json.loads(completion.candidates[0].content.parts[0].text)
+    if not questions:
+        return {"success": False, "message": "Question failed to generate."}
+    question = await prisma.question.create(data={
+        "question": questions[0]['question'], 
+        "title": questions[0]['title'], 
+        "choices": {"create": [{"choice": int(choice['choice']), "label": choice['label']} for choice in questions[0]['choices']]}}, include={"choices": True})
+
+    question = Question(**question.model_dump())
+    
+    return {"success": True, 'userId': user.userId, 'question': question}
 
 @app.get("/result/{user_id}")
-def get_result(user_id: uuid.UUID):
-    user: User = users[user_id]
-    if user.results:
-        return {"success": True, 'userId': user.id, 'results': user.results}
-    last_question = user.questions[-1]
-    q_with_answers = [str(q) + '\n' + str(a) for q, a in zip(user.questions, user.answers)]
-    completion = chatbot.generate_content(result_prompt + "\n" + str(user.basic_answers) + '\nList of Questions and answered so far:' + '\n'.join(q_with_answers) + f'\n({last_question.question}/10)')
+async def get_result(user_id: uuid.UUID, prisma: 'Prisma' = fastapi.Depends(db)):
+    results = await prisma.result.find_many(where={"userId": str(user_id)}, take=3, order=[{"createdAt": "desc"}, {"points": "desc"}])
+    if results:
+        return {"success": True, 'userId': user_id, 'results': results}
+    user = await prisma.profile.find_unique(where={"userId": str(user_id)}, include={"answers": {"include": {"choice": True, "question": True}, "order_by": [{"createdAt": "asc"}]},})
+    if not user:
+        return {"success": False, "message": "User not found."}
+    if not user.answers:
+        return {"success": False, "message": "No answers found."}
+    q_with_answers = [f"{answer.question.title}\n{answer.choice.label}" for answer in user.answers if answer.question and answer.choice]
+    last_question = await prisma.question.find_unique(where={"id": user.answers[-1].questionId})
+    if not last_question:
+        return {"success": False, "message": "Last question not found."}
+    basic_answers = f"Age Group: {user.ageGroup}\nGender{user.gender}\nEducation: {user.education}"
+    completion = chatbot.generate_content(result_prompt + "\n" + basic_answers + '\nList of Questions and answered so far:' + '\n'.join(q_with_answers) + f'\n({last_question.question}/10)')
     results = json.loads(completion.candidates[0].content.parts[0].text)
-    user.results = results
-    return {"success": True, 'userId': user.id, 'results': results}
+    await prisma.result.create_many(data=[{"result": result['result'], "points": int(result['points']), "advantages": result['advantages'], "disadvantages": result['disadvantages'], "match_description": result['match_description'], "description": result['description'], "userId": str(user_id)} for result in results])
+
+    return {"success": True, 'userId': user.userId, 'results': results}

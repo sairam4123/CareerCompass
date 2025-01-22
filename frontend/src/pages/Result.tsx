@@ -56,6 +56,7 @@ export default function Result({ userId: defaultUserId }: { userId?: string | nu
                 advantages={result.advantages}
                 disadvantages={result.disadvantages}
                 match_description={result.match_description}
+                tags={result.tags}
               />
             ))}
           </div>
@@ -99,6 +100,7 @@ function ResultSection({
   advantages,
   disadvantages,
   match_description,
+  tags
 }: {
   result: string;
   description: string;
@@ -106,6 +108,7 @@ function ResultSection({
   advantages: string[];
   disadvantages: string[];
   match_description: string;
+  tags: string[]
 }) {
   const copyToClipboard = () => {
     navigator.clipboard.writeText(JSON.stringify({ result, description, points, advantages, disadvantages, match_description }));
@@ -153,6 +156,9 @@ function ResultSection({
           ))}
         </ul>
       </div>
+      {tags ? <div className="flex flex-row gap-2 flex-wrap">
+          {tags.map(tag => <p className="italic inline-flex text-sm text-gray-500 whitespace-nowrap" key={tag}>{tag.toLowerCase()}</p>)}
+      </div> : <div><p className="italic text-sm text-gray-500">No tags found.</p></div>}
     </section>
   );
 }

@@ -5,4 +5,5 @@ export type ResultType = {
     advantages: string[];
     disadvantages: string[];
     match_description: string;
+    tags: string[];
 }

@@ -22,11 +22,11 @@ export default function AboutPage() {
             <h1 className="text-center font-bold text-4xl md:text-6xl">
                 About CareerCompass
             </h1>
-            <p className="text-left font-semibold text-lg w-full md:w-3/4 lg:w-2/3 xl:w-1/2">
-                CareerCompass is a career path recommendation system that helps you find the best career path for you.
-                We use a combination of machine learning algorithms and user input to provide you with the best career path for you.
-                We take into account your skills, interests, and personality to provide you with the best career path for you.
-                We are constantly updating our algorithms to provide you with the best career path for you.
+            <p className="text-left font-semibold text-lg w-full md:w-3/4 lg:w-2/3 xl:w-2/3">
+            CareerCompass is your ultimate guide to discovering the ideal career path tailored to you.<br/>
+            We leverage advanced machine learning algorithms alongside your personal input to recommend career options that align with your unique skills, interests, and personality.<br></br>
+<br></br>
+            By continually refining our algorithms and incorporating the latest insights, we ensure you receive up-to-date, personalized guidance to navigate your career journey confidently and successfully.<br></br>
             </p>
             <p className="text-center mt-auto text-lg">
                 Developed by Sairam Mangeshkar with ❤️<br />

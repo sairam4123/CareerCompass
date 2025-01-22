@@ -10,6 +10,7 @@ import useMutation from "./lib/useMutation";
 import { BasicAnswersType, QuestionType } from "./@types/Question";
 import { ChoiceType } from "./@types/Choice";
 import { useNavigate } from "react-router";
+import { Bounce, toast, ToastContainer } from "react-toastify";
 
 type AppStateType = "BEGIN" | "QUESTIONNAIRE" | "AI_QUESTIONNAIRE" | "DONE";
 
@@ -37,29 +38,45 @@ function App() {
 
   const [aiAnswers, setAiAnswers] = useState<string[]>([]);
   const questionMutation = useMutation<
-    { userId: string; question: QuestionType; max_questions: number },
+    { success: true; userId: string; question: QuestionType; max_questions: number } | { success: false, message: string },
     BasicAnswersType
   >({
     url: `${api}/answers`,
     method: "POST",
-    onSuccess: ({ userId, question, max_questions }) => {
+    onSuccess: (data) => {
+      if (!data.success) {
+        toast.error(`Failed to submit answers. Please try again later. Error: ${data.message}`);
+        return;
+      }
+      const { userId, question, max_questions } = data;
       setMaxQuestions(max_questions);
       setAppState("AI_QUESTIONNAIRE");
       setQuestion(question);
       setUserId(userId);
     },
+    onFailure: (error) => {
+      toast.error(`Failed to submit answers. Please try again later. ${error}`);
+    }
   });
   
 
   const nextQuestionMutation = useMutation<
-    { question: QuestionType },
+    { success: true; question: QuestionType } | { success: false, message: string },
     ChoiceType
   >({
     url: `${api}/answers/${userId}`,
     method: "POST",
-    onSuccess: ({ question }) => {
+    onSuccess: (data) => {
+      if (!data.success) {
+        toast.error(`Failed to submit answers. Please try again later. Error: ${data.message}`);
+        return;
+      }
+      const { question } = data;
       setQuestion(question);
     },
+    onFailure: (error) => {
+      toast.error(`Failed to submit answers. Please try again later. ${error}`);
+    }
   });
 
   return (
@@ -129,6 +146,19 @@ function App() {
           }}
         />
       )}
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={true}
+        newestOnTop={false}
+        closeOnClick={true}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        transition={Bounce}
+      />
     </>
   );
 }

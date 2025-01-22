@@ -11,14 +11,23 @@ export default function useFetch<T>(url: string, opts: FetchOpts = {enabled: tru
 
    const fetchData = useCallback(async () => {
     setLoading(true)
-    const res = await fetch(url)
-    const json = await res.json()
-    if (res.ok) {
-      setData(json)
-    } else {
-      setError(new Error(json))
+    try {
+      const res = await fetch(url)
+      const json = await res.json()
+      if (res.ok) {
+        if ("success" in json && !json.success) {
+          throw new Error(json.message)
+        }
+        setData(json)
+      } else {
+        setError(new Error(json))
+      }
+    } catch (e) {
+      setError(e as Error)
     }
-    setLoading(false)
+    finally {
+      setLoading(false)
+    }
    }, [url]);
 
    useEffect(() => {

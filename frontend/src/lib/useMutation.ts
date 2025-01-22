@@ -2,7 +2,7 @@ import { useState } from "react";
 
 type Status = "IDLE" | "LOADING" | "SUCCESS" | "FAILURE";
 
-export default function useMutation<TResult, TBody>({
+export default function useMutation<TResult, TBody, TError = unknown>({
   url,
   method,
   onSuccess,
@@ -11,10 +11,10 @@ export default function useMutation<TResult, TBody>({
   url: string;
   method: "POST" | "PUT" | "DELETE";
   onSuccess?: (data: TResult) => void;
-  onFailure?: (error: unknown) => void;
+  onFailure?: (error: TError) => void;
 }) {
   const [result, setResult] = useState< TResult | null >(null);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<TError | null>(null);
   const [status, setStatus] = useState<Status>("IDLE");
   const mutate = async (body: TBody) => {
     setStatus("LOADING");
@@ -31,6 +31,9 @@ export default function useMutation<TResult, TBody>({
       console.log("Data received: ", data);
       console.log("Data set: ", data, "response OK?", response.ok);
       if (response.ok) {
+        if ("success" in data && !data.success) {
+          throw new Error(data.message)
+        }
         setStatus("SUCCESS");
         onSuccess?.(data);
         setResult(data);
@@ -41,8 +44,8 @@ export default function useMutation<TResult, TBody>({
       }
     } catch (error) {
       setStatus("FAILURE");
-      setError(error as Error);
-      onFailure?.(error);
+      setError(error as TError);
+      onFailure?.(error as TError);
     }
   };
   return { result, error, status, mutate };

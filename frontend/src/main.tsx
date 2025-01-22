@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 import Result from './pages/Result.tsx'
 import { NavBar } from './components/NavBar.tsx'
 import About from './pages/About.tsx'
+import NotFound from './pages/NotFound.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -14,6 +15,7 @@ createRoot(document.getElementById('root')!).render(
       <Route path="/" element={<App />} />
       <Route path="/result/:userId" element={<><NavBar /><Result /></>} />
       <Route path="/about" element={<><NavBar /><About /></>} />
+      <Route path="*" element={<><NavBar /><NotFound /></>} />
     </Routes>
     </BrowserRouter>
   </StrictMode>,

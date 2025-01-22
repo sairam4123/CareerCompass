@@ -36,7 +36,7 @@ export default function Result({ userId: defaultUserId }: { userId?: string | nu
         className={`flex h-full flex-col justify-center items-center ${!userId ? "" : "mt-12"}`}
       >
         {userId && !loading && <h1 className="text-center font-bold text-6xl">Best Options</h1>}
-        {error && <p className="text-red-500">{error.message}</p>}
+        {error && <p className="text-red-500 p-2">{error.message}</p>}
         {(loading || !userId) && (
           <div className="flex flex-col animate-pulse items-center flex-1 mt-4 gap-2">
             <Spinner color="normal" size="large" />
@@ -157,7 +157,7 @@ function ResultSection({
         </ul>
       </div>
       {tags ? <div className="flex flex-row gap-2 flex-wrap">
-          {tags.map(tag => <p className="italic inline-flex text-sm text-gray-500 whitespace-nowrap" key={tag}>{tag.toLowerCase()}</p>)}
+          {tags.map(tag => <p className="italic h-fit bg-gray-200 p-2 rounded-full text-sm text-gray-500 whitespace-normal" key={tag}>{tag.toLowerCase()}</p>)}
       </div> : <div><p className="italic text-sm text-gray-500">No tags found.</p></div>}
     </section>
   );

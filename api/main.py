@@ -178,6 +178,7 @@ class ResultSchema(BaseModel):
     disadvantages: list[str]
     match_description: str | None = None
     description: str | None = None
+    tags: list[str] = []
 
     class Config:
         from_attributes = True
@@ -338,7 +339,6 @@ def post_answer(user_id: uuid.UUID, choice: ChoiceSchema, dbalchemy: Session = f
         .order_by(Answer.createdAt.asc())  # Sort by Answer.created_at
     )
     user = query.first()
-    print(str(user), user)
     # await dbalchemy.answer.create(data={"profileId": str(user_id), "choiceId": str(choice.id), "questionId": str(choice.question_id)})
     
     # get new question
@@ -394,7 +394,7 @@ def get_result(user_id: uuid.UUID, dbalchemy: Session = fastapi.Depends(db)):
     if not completion or not completion.candidates or not completion.candidates[0].content.parts:
         return {"success": False, "message": "Failed to generate content."}
     results = json.loads(completion.candidates[0].content.parts[0].text)
-    results = [Result(result=result['result'], points=result['points'], advantages=result['advantages'], disadvantages=result['disadvantages'], match_description=result['match_description'], description=result['description'], userId=user_id) for result in results]
+    results = [Result(result=result['result'], points=result['points'], advantages=result['advantages'], disadvantages=result['disadvantages'], tags=result['tags'], match_description=result['match_description'], description=result['description'], userId=user_id) for result in results]
     dbalchemy.add_all(results)
     dbalchemy.commit()
     results = dbalchemy.query(Result).filter(Result.userId == user_id).order_by(Result.createdAt.desc(), Result.points.desc()).all()

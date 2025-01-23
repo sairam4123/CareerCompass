@@ -8,6 +8,7 @@ import useWindowSize from "../lib/useWindowSize";
 import { useNavigate, useParams } from "react-router";
 import Button from "../components/Button";
 import { Bounce, toast, ToastContainer } from "react-toastify";
+import FeedbackForm from "../forms/FeedbackForm";
 
 export default function Result({ userId: defaultUserId }: { userId?: string | null }) {
   const { userId: paramUserId } = useParams();
@@ -89,6 +90,7 @@ export default function Result({ userId: defaultUserId }: { userId?: string | nu
         theme="light"
         transition={Bounce}
       />
+      <FeedbackForm isVisible={false} setIsVisible={() => {}} />
     </main>
   );
 }

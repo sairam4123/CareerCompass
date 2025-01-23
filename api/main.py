@@ -50,7 +50,7 @@ from sqlalchemy.orm import relationship, declarative_base
 
 from typing import List, Optional
 from sqlalchemy import (
-    Integer, ForeignKey, DateTime, func, ARRAY, Text, UUID
+    Integer, ForeignKey, DateTime, func, ARRAY, Text, Float
 )
 from sqlalchemy.orm import  Mapped, mapped_column, relationship
 import uuid
@@ -61,7 +61,7 @@ def generate_uuid() -> uuid.UUID:
 class Question(Base):
     __tablename__ = 'Question'
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=generate_uuid)
     question: Mapped[int] = mapped_column(Integer, nullable=False)
     title: Mapped[str] = mapped_column(Text, nullable=False)
     createdAt: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
@@ -74,7 +74,7 @@ class Question(Base):
 class Choice(Base):
     __tablename__ = 'Choice'
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=generate_uuid)
     choice: Mapped[int] = mapped_column(Integer, nullable=False)
     label: Mapped[str] = mapped_column(Text, nullable=False)
     questionId: Mapped[uuid.UUID] = mapped_column(ForeignKey('Question.id', ondelete='CASCADE'), nullable=False)
@@ -88,7 +88,7 @@ class Choice(Base):
 class Answer(Base):
     __tablename__ = 'Answer'
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=generate_uuid)
     questionId: Mapped[uuid.UUID] = mapped_column(ForeignKey('Question.id', ondelete='CASCADE'), nullable=False)
     choiceId: Mapped[uuid.UUID] = mapped_column(ForeignKey('Choice.id', ondelete='CASCADE'), nullable=False)
     profileId: Mapped[uuid.UUID] = mapped_column(ForeignKey('Profile.userId', ondelete='CASCADE'), nullable=False)
@@ -103,7 +103,7 @@ class Answer(Base):
 class Profile(Base):
     __tablename__ = 'Profile'
 
-    userId: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
+    userId: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=generate_uuid)
     ageGroup: Mapped[str] = mapped_column(Text, nullable=False)
     education: Mapped[str] = mapped_column(Text, nullable=False)
     gender: Mapped[str] = mapped_column(Text, nullable=False)
@@ -114,11 +114,26 @@ class Profile(Base):
     # Relationships
     answers: Mapped[List[Answer]] = relationship(back_populates='profile', cascade='all, delete-orphan')
     results: Mapped[List[Result]] = relationship(back_populates='profile', cascade='all, delete-orphan')
+    feedbacks: Mapped[List[Feedback]] = relationship(back_populates='profile', cascade='all, delete-orphan')
+
+class Feedback(Base):
+    __tablename__ = 'Feedback'
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=generate_uuid)
+    userId: Mapped[uuid.UUID] = mapped_column(ForeignKey('Profile.userId', ondelete='CASCADE'), nullable=False)
+
+    feedback: Mapped[str] = mapped_column(Text, nullable=False)
+    rating: Mapped[float] = mapped_column(Float, nullable=False)
+    createdAt: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
+    updatedAt: Mapped[DateTime] = mapped_column(DateTime, default=func.now(), server_onupdate=func.now(), nullable=False)
+
+    # Relationships
+    profile: Mapped[Profile] = relationship(back_populates='feedbacks')
 
 class Result(Base):
     __tablename__ = 'Result'
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=generate_uuid)
     userId: Mapped[uuid.UUID] = mapped_column(ForeignKey('Profile.userId', ondelete='CASCADE'), nullable=False)
     result: Mapped[str] = mapped_column(Text, nullable=False)
     points: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -200,6 +215,14 @@ class ProfileSchema(BaseModel):
     class Config:
         from_attributes = True
 
+class FeedbackSchema(BaseModel):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4)
+    feedback: str
+    rating: float
+
+    class Config:
+        from_attributes = True
+
 prompt = """
 You are a career guide with expertise in understanding the job market and helping people find the right career paths. Your goal is to analyze a person's personality, interests, and education through structured questions and provide career domain suggestions (not specific job listings).  
 
@@ -249,6 +272,7 @@ Instructions for Behavior:
 2. Ask only one question at a time.
 3. Your primary objective is to suggest a career domain based on the user's responses.
 
+LANGUAGE: English (en-IN)
 Remember: NO OPEN-ENDED QUESTIONS. NO "OTHER" CHOICES.
 """
 
@@ -260,6 +284,7 @@ Ensure that the domains being suggested aligns with the user's educational quali
 Recommend other domains as well for example Fisheries, Pollution Control, etc.
 Please return the result in the following schema:
 RESULT SCHEMA:
+LANGUAGE: English (en-IN)
 [
     {
         "result": "{role} in {domain}.",
@@ -369,6 +394,7 @@ def post_answer(user_id: uuid.UUID, choice: ChoiceSchema, dbalchemy: Session = f
     question = dbalchemy.query(Question).filter(Question.id == question.id).options(joinedload(Question.choices)).first()
     question = QuestionSchema.model_validate(question)
     dbalchemy.commit()
+
     return {"success": True, 'userId': user.userId, 'question': question}
 
 @app.get("/result/{user_id}")
@@ -397,8 +423,22 @@ def get_result(user_id: uuid.UUID, dbalchemy: Session = fastapi.Depends(db)):
     results = [Result(result=result['result'], points=result['points'], advantages=result['advantages'], disadvantages=result['disadvantages'], tags=result['tags'], match_description=result['match_description'], description=result['description'], userId=user_id) for result in results]
     dbalchemy.add_all(results)
     dbalchemy.commit()
+
     results = dbalchemy.query(Result).filter(Result.userId == user_id).order_by(Result.createdAt.desc(), Result.points.desc()).all()
 
     # await dbalchemy.result.create_many(data=[{"result": result['result'], "points": int(result['points']), "advantages": result['advantages'], "disadvantages": result['disadvantages'], "match_description": result['match_description'], "description": result['description'], "userId": str(user_id)} for result in results])
-
     return {"success": True, 'userId': user.userId, 'results': results}
+
+@app.post("/feedback/{user_id}")
+def post_feedback(user_id: uuid.UUID, feedback: FeedbackSchema, dbalchemy: Session = fastapi.Depends(db)):
+    # user = await dbalchemy.profile.find_unique(where={"userId": str(user_id)})
+    user = dbalchemy.query(Profile).filter(Profile.userId == user_id).first()
+    if not user:
+        return {"success": False, "message": "User not found."}
+
+    # await dbalchemy.feedback.create(data={"userId": str(user_id), "feedback": feedback})
+    feedback = Feedback(**{"userId": user_id, "feedback": feedback.feedback, "rating": feedback.rating})
+    dbalchemy.add(feedback)
+    dbalchemy.commit()
+
+    return {"success": True, 'userId': user.userId}

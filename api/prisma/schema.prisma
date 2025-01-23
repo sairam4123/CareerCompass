@@ -57,6 +57,7 @@ model Profile {
 
     answers Answer[]
     results Result[]
+    feedback Feedback[]
 }
 
 model Result {
@@ -74,4 +75,14 @@ model Result {
     
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+model Feedback {
+    userId  String   @db.Uuid() @id
+    profile Profile  @relation(fields: [userId], references: [userId])
+
+    feedback String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    rating    Float
 }

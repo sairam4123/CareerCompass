@@ -17,6 +17,9 @@ sqlalchemy = "^2.0.37"
 asyncpg = "^0.30.0"
 psycopg2-binary = "^2.9.10"
 
+[tool.poetry.group.dev.dependencies]
+prisma = "^0.15.0"
+
 [tool.prisma]
 binary_cache_dir = "F:/Python projects/CareerCompass/_prisma/_cache/"
 

@@ -21,13 +21,13 @@ export default function Result({ userId: defaultUserId, shared = false }: { user
   );
 
   const [isFeedbackFormVisible, setIsFeedbackFormVisible] = useState(false);
-  useEffect(() => {
-    if (shared) return;
-    const timer = setTimeout(() => {
-      setIsFeedbackFormVisible(true);
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, []);
+  // useEffect(() => {
+  //   if (shared) return;
+  //   const timer = setTimeout(() => {
+  //     setIsFeedbackFormVisible(true);
+  //   }, 5000);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   const bigInMiddle = (list: ResultType[]) => {
     return list.map((v) => ({ ...v }))
@@ -79,14 +79,21 @@ export default function Result({ userId: defaultUserId, shared = false }: { user
             Please consult with a career counselor for more accurate results.
         </p>)}
         {/* {data && userId && (<ResultsTable results={data.results} />)} */}
-        {userId && (<div className={`${loading && "opacity-0"} flex-1 flex flex-row w-full transition-all items-center justify-center gap-8 mt-4`}>
+        {userId && !shared && (<div className={`${loading && "opacity-0"} flex-1 flex flex-row w-full transition-all items-center justify-center gap-8 mt-4`}>
           <Button icon={<MdAutorenew />} text="Start Over" onClick={() => navigate("/")} />
             <Button icon={<MdShare />} text="Share" onClick={() => {
               navigator.clipboard.writeText(`${window.location.origin}/share/${userId}`); 
               // alert user the link has been copied
             toast.success("Link copied to clipboard!", { position: "top-right" });
+            setIsFeedbackFormVisible(true);
           }} />
           </div>)}
+        {userId && shared && (<div className="flex flex-col transition-all items-center justify-center mt-16">
+          <p className="text-center text-extra-dark mt-2">This is a shared result. You can try the quiz yourself to get your own results.</p>
+          <div className="flex-1 flex flex-row w-full transition-all items-center justify-center">
+          <Button icon={<MdAutorenew />} text="Let's try" onClick={() => navigate("/")} />
+          </div></div>)}
+
       </section>
       <ToastContainer
         position="top-right"

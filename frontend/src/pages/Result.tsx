@@ -9,7 +9,7 @@ import { useNavigate, useParams } from "react-router";
 import Button from "../components/Button";
 import { Bounce, toast, ToastContainer } from "react-toastify";
 import FeedbackForm from "../forms/FeedbackForm";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function Result({ userId: defaultUserId, shared = false }: { userId?: string | null; shared?: boolean }) {
   const { userId: paramUserId } = useParams();

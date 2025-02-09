@@ -5,7 +5,6 @@ import { api } from "../lib/api";
 import useMutation from "../lib/useMutation";
 import cn from "../utils/cn";
 import { useState } from "react";
-import { IoClose } from "react-icons/io5";
 import { BsX } from "react-icons/bs";
 
 export default function FeedbackForm({ isVisible, setIsVisible, userId }: { isVisible: boolean, setIsVisible: (value: boolean) => void; userId: string }) {

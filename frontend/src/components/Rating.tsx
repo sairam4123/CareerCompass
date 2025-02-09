@@ -32,8 +32,8 @@ export default function Ratings({ maxValue = 5, value = 0, onChange }: {
   const [rating, setRating] = useState(value);
   const [hoverRating, setHoverRating] = useState(0);
 
-  const handleClick = (index, event) => {
-    const rect = event.target.getBoundingClientRect();
+  const handleClick = (index: number, event: React.MouseEvent<HTMLOrSVGElement>) => {
+    const rect = (event.target as HTMLElement)?.getBoundingClientRect();
     const clickPosition = event.clientX - rect.left;
     const isHalf = clickPosition < rect.width / 2;
     const newRating = isHalf ? index + 0.5 : index + 1;
@@ -41,8 +41,8 @@ export default function Ratings({ maxValue = 5, value = 0, onChange }: {
     if (onChange) onChange(newRating);
   };
 
-  const handleMouseMove = (index, event) => {
-    const rect = event.target.getBoundingClientRect();
+  const handleMouseMove = (index: number, event: React.MouseEvent<HTMLOrSVGElement>) => {
+    const rect = (event.target as HTMLElement)?.getBoundingClientRect();
     const hoverPosition = event.clientX - rect.left;
     const isHalf = hoverPosition < rect.width / 2;
     setHoverRating(isHalf ? index + 0.5 : index + 1);

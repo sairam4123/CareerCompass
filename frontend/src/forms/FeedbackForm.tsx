@@ -5,6 +5,8 @@ import { api } from "../lib/api";
 import useMutation from "../lib/useMutation";
 import cn from "../utils/cn";
 import { useState } from "react";
+import { IoClose } from "react-icons/io5";
+import { BsX } from "react-icons/bs";
 
 export default function FeedbackForm({ isVisible, setIsVisible, userId }: { isVisible: boolean, setIsVisible: (value: boolean) => void; userId: string }) {
 
@@ -34,9 +36,12 @@ export default function FeedbackForm({ isVisible, setIsVisible, userId }: { isVi
 
     return (
         <>
-        <div className={cn("transition-all absolute flex top-0 left-0 h-screen w-screen flex-col items-center justify-center gap-4 bg-white/40 backdrop-blur-md", isVisible ? "" : "hidden")} onClick={() => setIsVisible(false)}>
+        <div className={cn("transition-all absolute flex top-0 left-0 h-screen w-screen flex-col items-center justify-center gap-4 bg-white/40 backdrop-blur-md", isVisible ? "" : "hidden")}>
             <div className="flex outline outline-2 outline-gray-200 flex-col h-fit w-5/6 md:w-4/5 lg:w-2/3 xl:w-1/2 2xl:w-2/7  justify-center items-center gap-4 p-4 bg-white rounded-lg">
-                <h2 className="text-xl">Feedback Form</h2>
+                <div className="flex w-full justify-between items-center">
+                <h2 className="text-xl w-full text-center">Feedback Form</h2>
+                <button onClick={() => {setIsVisible(false)}} className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 transition-all"><BsX size={20} /></button>
+                </div>
                 <p className="text-sm text-gray-700">How well did the results match your expectations?</p>
                 <div className="flex flex-col flex-1 w-full items-center gap-4">
                     <Ratings value={rating} maxValue={5} onChange={(v) => {setRating(v)}} />

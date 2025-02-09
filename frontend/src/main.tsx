@@ -14,6 +14,7 @@ createRoot(document.getElementById('root')!).render(
     <Routes>
       <Route path="/" element={<App />} />
       <Route path="/result/:userId" element={<><NavBar /><Result /></>} />
+      <Route path="/share/:userId" element={<><NavBar /><Result shared={true}/></>} />
       <Route path="/about" element={<><NavBar /><About /></>} />
       <Route path="*" element={<><NavBar /><NotFound /></>} />
     </Routes>

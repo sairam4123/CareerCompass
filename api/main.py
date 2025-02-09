@@ -119,8 +119,8 @@ class Profile(Base):
 class Feedback(Base):
     __tablename__ = 'Feedback'
 
-    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=generate_uuid)
-    userId: Mapped[uuid.UUID] = mapped_column(ForeignKey('Profile.userId', ondelete='CASCADE'), nullable=False)
+    # id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), default=generate_uuid)
+    userId: Mapped[uuid.UUID] = mapped_column(ForeignKey('Profile.userId', ondelete='CASCADE'), primary_key=True, nullable=False)
 
     feedback: Mapped[str] = mapped_column(Text, nullable=False)
     rating: Mapped[float] = mapped_column(Float, nullable=False)
@@ -449,6 +449,10 @@ def post_feedback(user_id: uuid.UUID, feedback: FeedbackSchema, dbalchemy: Sessi
     user = dbalchemy.query(Profile).filter(Profile.userId == user_id).first()
     if not user:
         return {"success": False, "message": "User not found."}
+
+    feedback_query = dbalchemy.query(Feedback).filter(Feedback.userId == user_id).first()
+    if feedback_query:
+        return {"success": False, "message": "Feedback already exists."}
 
     # await dbalchemy.feedback.create(data={"userId": str(user_id), "feedback": feedback})
     feedback = Feedback(**{"userId": user_id, "feedback": feedback.feedback, "rating": feedback.rating})

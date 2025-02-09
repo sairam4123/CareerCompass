@@ -9,8 +9,9 @@ import { useNavigate, useParams } from "react-router";
 import Button from "../components/Button";
 import { Bounce, toast, ToastContainer } from "react-toastify";
 import FeedbackForm from "../forms/FeedbackForm";
+import { useEffect, useState } from "react";
 
-export default function Result({ userId: defaultUserId }: { userId?: string | null }) {
+export default function Result({ userId: defaultUserId, shared = false }: { userId?: string | null; shared?: boolean }) {
   const { userId: paramUserId } = useParams();
   const navigate = useNavigate();
   const userId = defaultUserId ?? paramUserId;
@@ -18,6 +19,16 @@ export default function Result({ userId: defaultUserId }: { userId?: string | nu
     `${api}/result/${userId}`,
     { enabled: !!userId }
   );
+
+  const [isFeedbackFormVisible, setIsFeedbackFormVisible] = useState(false);
+  useEffect(() => {
+    if (shared) return;
+    const timer = setTimeout(() => {
+      setIsFeedbackFormVisible(true);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const bigInMiddle = (list: ResultType[]) => {
     return list.map((v) => ({ ...v }))
       .sort((a, b) => {
@@ -71,7 +82,7 @@ export default function Result({ userId: defaultUserId }: { userId?: string | nu
         {userId && (<div className={`${loading && "opacity-0"} flex-1 flex flex-row w-full transition-all items-center justify-center gap-8 mt-4`}>
           <Button icon={<MdAutorenew />} text="Start Over" onClick={() => navigate("/")} />
             <Button icon={<MdShare />} text="Share" onClick={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/result/${userId}`); 
+              navigator.clipboard.writeText(`${window.location.origin}/share/${userId}`); 
               // alert user the link has been copied
             toast.success("Link copied to clipboard!", { position: "top-right" });
           }} />
@@ -90,7 +101,7 @@ export default function Result({ userId: defaultUserId }: { userId?: string | nu
         theme="light"
         transition={Bounce}
       />
-      <FeedbackForm isVisible={false} setIsVisible={() => {}} />
+      <FeedbackForm userId={userId ?? ""} isVisible={isFeedbackFormVisible} setIsVisible={(v) => {setIsFeedbackFormVisible(v)}} />
     </main>
   );
 }

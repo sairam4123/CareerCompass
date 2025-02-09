@@ -16,6 +16,7 @@ export default function useMutation<TResult, TBody, TError = unknown>({
   const [result, setResult] = useState< TResult | null >(null);
   const [error, setError] = useState<TError | null>(null);
   const [status, setStatus] = useState<Status>("IDLE");
+  const isLoading = status === "LOADING";
   const mutate = async (body: TBody) => {
     setStatus("LOADING");
     console.log(JSON.stringify(body))
@@ -48,5 +49,5 @@ export default function useMutation<TResult, TBody, TError = unknown>({
       onFailure?.(error as TError);
     }
   };
-  return { result, error, status, mutate };
+  return { result, error, isLoading, status, mutate };
 }

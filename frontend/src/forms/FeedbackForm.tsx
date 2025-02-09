@@ -46,7 +46,7 @@ export default function FeedbackForm({ isVisible, setIsVisible, userId }: { isVi
                             setFeedback(e.target.value);
                         }} className="w-full h-32 p-2 border border-gray-200 rounded-md" />
                     </div>
-                    <Button text="Submit" isLoading={mutation.status === "LOADING"} onClick={() => {
+                    <Button text="Submit" isLoading={mutation.isLoading} onClick={() => {
                         mutation.mutate({ feedback: feedback, rating: rating });
                     }} />
                 </div>

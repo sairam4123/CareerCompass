@@ -122,7 +122,7 @@ function App() {
       {appState === "AI_QUESTIONNAIRE" && (
         <Question
           disablePrev={true}
-          isLoading={nextQuestionMutation.status === "LOADING"}
+          isLoading={nextQuestionMutation.isLoading}
           maxQuestions={maxQuestions}
           question={question}
           selectedAnswer={-1}

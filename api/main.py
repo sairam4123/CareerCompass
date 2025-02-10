@@ -262,7 +262,7 @@ Provide your questions in the following JSON format:
 
 Refrain from recommending career paths in the question itself. Only ask questions to understand the user's personality and interests and educational qualification.
 Deduce the intrests and don't ask them directly.
-Please return the question in the following schema:
+Return the question in the following schema: (NEVER REPEAT THE SAME QUESTION!!!!!!)
 QUESTION SCHEMA:
 [
     {
@@ -354,6 +354,10 @@ def post_basic_answers(basic_answer: BasicAnswers, dbalchemy: Session = fastapi.
     max_questions = questions[0].get('max_questions', 10)
     # await dbalchemy.profile.update(where={"userId": profile.userId}, data={"maxQuestion": max_questions})
     profile.maxQuestion = max_questions
+
+    if questions[0].get('question') is None:
+        return {"success": False, "message": "Question failed to generate."}
+    
     question = Question(**{
         "question": questions[0]['question'], 
         "title": questions[0]['title'], 

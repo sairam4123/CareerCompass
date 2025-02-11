@@ -228,7 +228,11 @@ You are a career guide with expertise in understanding the job market and helpin
 
 Do NOT question the user his AGE GROUP, GENDER, or EDUCATION. You have it already.
 
-NEVER REPEAT THE QUESTION.
+NEVER REPEAT THE QUESTION. INCREMENT THE QUESTION NUMBER. Ask only ONE question at a time.
+ASK ONLY ONE QUESTION AT A TIME. DO NOT ASK MULTIPLE QUESTIONS IN ONE GO.
+
+KEEP THE QUESTION SIMPLE AND STRAIGHTFORWARD. DO NOT ASK COMPLEX QUESTIONS.
+Question character limit: 100 characters.
 
 Key rules:  
 1. Ask only multiple-choice questions (MCQs) to understand the user's situation.  
@@ -244,7 +248,7 @@ Key rules:
 6. You may also ask about the user's dislikes to avoid suggesting careers in those fields.
 
 You may also provide the maximum number of questions you will ask the user in maximum_questions.
-Optimally, you should ask between 10-15 questions to understand the user's personality and interests.
+Optimally, you should ask between 10 and 15 questions to understand the user's personality and interests.
 Please do not ask more than 25 questions (specify it in maximum_questions).
 
 You get the following data from the user:
@@ -258,28 +262,26 @@ You get the following data from the user:
 - Avoid recommending careers in your questions; focus solely on gathering insights.  
 - Do not use "Other" as a choice in your questions.  
 
-Provide your questions in the following JSON format:  
+NEVER REPEAT THE QUESTION. ALWAYS INCREMENT THE QUESTION. Ask only ONE question at a time.
 
 Refrain from recommending career paths in the question itself. Only ask questions to understand the user's personality and interests and educational qualification.
 Deduce the intrests and don't ask them directly.
-Return the question in the following schema: (NEVER REPEAT THE SAME QUESTION!!!!!!)
+Provide your questions in the following JSON format:  
 QUESTION SCHEMA:
-[
+{
+    "max_questions": 10,
+    "question": 1,
+    "title": "What is your age group?",
+    "choices": [{
+        "choice": 1,
+        "label": "18-25"
+    }, 
     {
-        "max_questions": 10,
-        "question": 1,
-        "title": "What is your age group?",
-        "choices": [{
-            "choice": 1,
-            "label": "18-25"
-        }, 
-        {
-            "choice": 2,
-            "label": "26-35"
-        }
-        ]
-    },
-]
+        "choice": 2,
+        "label": "26-35"
+    }
+    ]
+},
 
 Instructions for Behavior:
 
@@ -348,7 +350,12 @@ def post_basic_answers(basic_answer: BasicAnswers, dbalchemy: Session = fastapi.
         return {"success": False, "message": "Failed to generate content."}
     print("Generated content...")
     questions: list[dict] = json.loads(completion.candidates[0].content.parts[0].text)
+    if type(questions) == dict:
+        print("LOG: Got question as a dict. (Should be a list)")
+        questions = [questions]
+        print(questions)
     if not questions:
+        print("LOG: Questions is None", questions)
         return {"success": False, "message": "Question failed to generate."}
     
     max_questions = questions[0].get('max_questions', 10)
@@ -356,6 +363,7 @@ def post_basic_answers(basic_answer: BasicAnswers, dbalchemy: Session = fastapi.
     profile.maxQuestion = max_questions
 
     if questions[0].get('question') is None:
+
         return {"success": False, "message": "Question failed to generate."}
     
     question = Question(**{
@@ -401,17 +409,26 @@ def post_answer(user_id: uuid.UUID, choice: ChoiceSchema, dbalchemy: Session = f
     if not user.answers:
         return {"success": False, "message": "No answers found."}
 
-    q_with_answers = [f"{answer.question.title}\n{answer.choice.label}" for answer in user.answers if answer.question and answer.choice]
+    q_with_answers = [f"{answer.question.question}. {answer.question.title}\nAnswer:{answer.choice.label}" for answer in user.answers if answer.question and answer.choice]
     basic_answers = f"Age Group: {user.ageGroup}\nGender: {user.gender}\nEducation: {user.education}"
     last_question = dbalchemy.query(Question).filter(Question.id == choice.question_id).first()
     if not last_question:
         return {"success": False, "message": "Last question not found."}
     completion = chatbot.generate_content(prompt + "\n" + basic_answers + '\nList of Questions and answered so far:' + '\n'.join(q_with_answers) + f'\nLast Question: ({last_question.question}/{user.maxQuestion} max)')
+    print(prompt + "\n" + basic_answers + '\nList of Questions and answered so far:' + '\n'.join(q_with_answers) + f'\nLast Question: ({last_question.question}/{user.maxQuestion} max)')
     if not completion or not completion.candidates or not completion.candidates[0].content.parts:
         return {"success": False, "message": "Failed to generate content."}
     questions = json.loads(completion.candidates[0].content.parts[0].text)
     if not questions:
         return {"success": False, "message": "Question failed to generate."}
+    if type(questions) == dict:
+        print("LOG: Got question as a dict. (Should be a list)")
+        questions = [questions]
+        print(questions)
+    if questions[0].get('question') is None:
+        print("LOG: Question is None", questions)
+        return {"success": False, "message": "Question failed to generate."}
+    
     question = Question(**{
         "question": questions[0]['question'], 
         "title": questions[0]['title'], 
@@ -438,7 +455,7 @@ def get_result(user_id: uuid.UUID, dbalchemy: Session = fastapi.Depends(db)):
     if not user.answers:
         return {"success": False, "message": "No answers found."}
     
-    q_with_answers = [f"{answer.question.title}\n{answer.choice.label}" for answer in user.answers if answer.question and answer.choice]
+    q_with_answers = [f"{answer.question.question}. {answer.question.title}\nAnswer:{answer.choice.label}" for answer in user.answers if answer.question and answer.choice]
     # last_question = await dbalchemy.question.find_unique(where={"id": user.answers[-1].questionId})
     last_question = dbalchemy.query(Question).filter(Question.id == user.answers[-1].questionId).first()
     if not last_question:

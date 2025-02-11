@@ -4,13 +4,27 @@ import Ratings from "../components/Rating";
 import { api } from "../lib/api";
 import useMutation from "../lib/useMutation";
 import cn from "../utils/cn";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BsX } from "react-icons/bs";
 
 export default function FeedbackForm({ isVisible, setIsVisible, userId }: { isVisible: boolean, setIsVisible: (value: boolean) => void; userId: string }) {
 
     const [rating, setRating] = useState(0);
     const [feedback, setFeedback] = useState("");
+
+    useEffect(() => {
+
+        if (isVisible) {
+            if (typeof window !== "undefined" && window.document) {
+                window.document.body.style.overflow = "hidden";
+                window.scrollTo({top: 0, behavior: "instant"});
+            }
+        } else {
+            if (typeof window !== "undefined" && window.document) {
+                window.document.body.style.overflow = "auto";
+            }
+        }
+    }, [isVisible]);
 
     const mutation = useMutation<null, { feedback: string, rating: number }, {success: false, message: string}>({
         url: `${api}/feedback/${userId}`,

@@ -21,7 +21,7 @@
 //     )
 // }
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { BsStarFill, BsStar, BsStarHalf } from "react-icons/bs";
 
 export default function Ratings({ maxValue = 5, value = 0, onChange }: {
@@ -32,7 +32,7 @@ export default function Ratings({ maxValue = 5, value = 0, onChange }: {
   const [rating, setRating] = useState(value);
   const [hoverRating, setHoverRating] = useState(0);
 
-  const handleClick = (index: number, event: React.MouseEvent<HTMLOrSVGElement>) => {
+  const handleClick = useCallback((index: number, event: React.MouseEvent<HTMLOrSVGElement>) => {
     event.preventDefault();
     const rect = (event.target as HTMLElement)?.getBoundingClientRect();
     const clickPosition = event.clientX - rect.left;
@@ -40,19 +40,19 @@ export default function Ratings({ maxValue = 5, value = 0, onChange }: {
     const newRating = isHalf ? index + 0.5 : index + 1;
     setRating(newRating);
     if (onChange) onChange(newRating);
-  };
+  }, [onChange]);
 
-  const handleMouseMove = (index: number, event: React.MouseEvent<HTMLOrSVGElement>) => {
+  const handleMouseMove = useCallback((index: number, event: React.MouseEvent<HTMLOrSVGElement>) => {
     event.preventDefault();
     const rect = (event.target as HTMLElement)?.getBoundingClientRect();
     const hoverPosition = event.clientX - rect.left;
     const isHalf = hoverPosition < rect.width / 2;
     setHoverRating(isHalf ? index + 0.5 : index + 1);
-  };
+  }, []);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     setHoverRating(0);
-  };
+  }, []);
 
   console.log(rating, hoverRating);
 
@@ -66,15 +66,15 @@ export default function Ratings({ maxValue = 5, value = 0, onChange }: {
     return (
       <div className="flex gap-1" onMouseLeave={handleMouseLeave}>
         {[...Array(fullStars)].map((_, i) => (
-          <BsStarFill key={i} fill="currentColor" className={`w-6 h-6 cursor-pointer ${(hoverRating > i) ? "text-yellow-200" : "text-yellow-500"}`} onClick={(e) => handleClick(i, e)} onMouseMove={(e) => handleMouseMove(i, e)} />
+          <BsStarFill key={i} fill="currentColor" className={`w-6 h-6 cursor-pointer ${(hoverRating > i) ? "text-yellow-300" : "text-yellow-500"}`} onClick={(e) => handleClick(i, e)} onMouseMove={(e) => handleMouseMove(i, e)} />
         ))}
-        {hasHalfStar && <BsStarHalf fill="currentColor" className={`w-6 h-6 cursor-pointer ${(hoverRating > fullStars) ? "text-yellow-200" : "text-yellow-500"}`} onClick={(e) => handleClick(fullStars, e)} onMouseMove={(e) => handleMouseMove(fullStars, e)} />}
+        {hasHalfStar && <BsStarHalf fill="currentColor" className={`w-6 h-6 cursor-pointer ${(hoverRating > fullStars) ? "text-yellow-300" : "text-yellow-500"}`} onClick={(e) => handleClick(fullStars, e)} onMouseMove={(e) => handleMouseMove(fullStars, e)} />}
         {[...Array(emptyStars)].map((_, i) => (
-          <BsStar key={i + fullStars + 1} className={`w-6 h-6 cursor-pointer ${(hoverRating > i + fullStars) ? "text-yellow-200" : "text-yellow-500"}`} onClick={(e) => handleClick(i + fullStars, e)} onMouseMove={(e) => handleMouseMove(i + fullStars, e)} />
+          <BsStar key={i + fullStars + 1} className={`w-6 h-6 cursor-pointer ${(hoverRating > i + fullStars + 1) ? "text-yellow-300" : "text-yellow-500"}`} onClick={(e) => handleClick(i + fullStars, e)} onMouseMove={(e) => handleMouseMove(i + fullStars, e)} />
         ))}
       </div>
     );
-  }, [displayedRating, maxValue]);
+  }, [displayedRating, maxValue, hoverRating, handleClick, handleMouseMove, handleMouseLeave]);
 
   return <div>{stars}</div>;
 }

@@ -223,6 +223,17 @@ class FeedbackSchema(BaseModel):
     class Config:
         from_attributes = True
 
+class AnswerSchemaOut(BaseModel):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4)
+    question: QuestionSchema
+    choice: ChoiceSchema
+
+    class Config:
+        from_attributes = True
+
+    def __str__(self):
+        return f"Question: {self.question}\nChoice: {self.choice}"
+
 prompt = """
 You are a career guide with expertise in understanding the job market and helping people find the right career paths. Your goal is to analyze a person's personality, interests, and education through structured questions and provide career domain suggestions (not specific job listings).  
 
@@ -473,6 +484,19 @@ def get_result(user_id: uuid.UUID, dbalchemy: Session = fastapi.Depends(db)):
 
     # await dbalchemy.result.create_many(data=[{"result": result['result'], "points": int(result['points']), "advantages": result['advantages'], "disadvantages": result['disadvantages'], "match_description": result['match_description'], "description": result['description'], "userId": str(user_id)} for result in results])
     return {"success": True, 'userId': user.userId, 'results': results}
+
+@app.get("/answers/{user_id}")
+def get_answers(user_id: uuid.UUID, dbalchemy: Session = fastapi.Depends(db)):
+    user = dbalchemy.query(Profile).filter(Profile.userId == user_id).first()
+    # user = await dbalchemy.profile.find_unique(where={"userId": str(user_id)})
+    if not user:
+        return {"success": False, "message": "User not found."}
+    answers = dbalchemy.query(Answer).filter(Answer.profileId == user_id).options(joinedload(Answer.choice), joinedload(Answer.question)).order_by(Answer.createdAt.asc()).all()
+    # answers = await dbalchemy.answer.find_many(where={"profileId": str(user_id)}, include={"choice": True, "question": True}, order_by=[{"createdAt": "asc"}])
+    if not answers:
+        return {"success": False, "message": "Questions not found."}
+    answers = [AnswerSchemaOut(id=answer.id, question=QuestionSchema.model_validate(answer.question), choice=ChoiceSchema.model_validate(answer.choice)) for answer in answers]
+    return {"success": True, 'userId': user_id, 'answers': answers}
 
 @app.post("/feedback/{user_id}")
 def post_feedback(user_id: uuid.UUID, feedback: FeedbackSchema, dbalchemy: Session = fastapi.Depends(db)):

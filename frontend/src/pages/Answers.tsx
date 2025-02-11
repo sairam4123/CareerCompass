@@ -21,7 +21,7 @@ export default function Answers({userId}: {userId?: string | null}) {
 
 function Answer({answer, showAllChoices = false, onPress}: {answer: AnswerType; showAllChoices?: boolean; onPress: () => void}) {
     return (
-        <div className="p-4 select-none cursor-pointer bg-white shadow-md rounded-md hover:shadow-lg transition-all hover:scale-[1.02]" onClick={onPress}>
+        <div className="p-4 select-none cursor-pointer bg-white shadow-md rounded-md hover:shadow-lg transition-all hover:scale-[1.02]" onClick={onPress} onMouseEnter={onPress} onMouseLeave={onPress}>
             <h1 className="font-bold text-lg text-black">{answer.question.question}. {answer.question.title}</h1>
             {!showAllChoices && <p className="italic font-semibold text-gray-600">{answer.choice.choice} - {answer.choice.label}</p>}
             {showAllChoices && (

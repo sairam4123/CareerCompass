@@ -135,14 +135,14 @@ function App() {
               question.choices.find((c) => c.choice === answer)?.label ??
                 "No answer.",
             ]);
+            nextQuestionMutation.mutate({
+              ...question.choices.find((c) => c.choice === answer)!,
+            });
             if (question.question === maxQuestions) {
               setAppState("DONE");
               navigate(`/result/${userId}`);  
               return;
             }
-            nextQuestionMutation.mutate({
-              ...question.choices.find((c) => c.choice === answer)!,
-            });
           }}
         />
       )}

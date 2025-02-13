@@ -30,6 +30,7 @@ export default {
         'pop-in': 'popIn 0.5s ease-in-out',
         'pop-out': 'popOut 1s ease-in-out',
         'flip-in': 'flipIn 1s ease-in-out',
+        'fade-in-left': 'fadeInLeft 0.25 ease-in-out',
       },
     },
   },

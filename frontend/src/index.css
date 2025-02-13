@@ -56,3 +56,12 @@
         transform: rotateY(0deg) scale(1, 1);
     }
 }
+
+@keyframes fadeInLeftShow {
+    0% {
+        width: 100%;
+    }
+    100% {
+        width: 0%;
+    }
+}

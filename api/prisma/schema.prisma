@@ -70,6 +70,7 @@ model Result {
     advantages String[]
     disadvantages String[]
     tags String[]
+    match String[]
     
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

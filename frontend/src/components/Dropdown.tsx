@@ -3,7 +3,7 @@ import Button from "../components/Button";
 import cn from "../utils/cn";
 import { BsChevronDown as ChevronDown } from "react-icons/bs";
 
-const Dropdown = <T extends {}>({ options, onSelect, label_key, value_key }: {options: T[], onSelect: (option: T) => void; label_key: keyof T; value_key: keyof T}) => {
+const Dropdown = <T extends object>({ options, onSelect, label_key, value_key }: {options: T[], onSelect: (option: T) => void; label_key: keyof T; value_key: keyof T}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState<T | null> (null);
 

@@ -21,18 +21,18 @@ export default function Answers({userId}: {userId?: string | null}) {
 
 function Answer({answer, showAllChoices = false, onPress}: {answer: AnswerType; showAllChoices?: boolean; onPress: () => void}) {
     return (
-        <div className="p-4 select-none cursor-pointer bg-white shadow-md rounded-md hover:shadow-lg transition-all hover:scale-[1.02]" onClick={onPress} onMouseEnter={onPress} onMouseLeave={onPress}>
+        <div className="p-4 select-none cursor-pointer bg-white shadow-md rounded-md hover:shadow-xl transition-all  hover:scale-[1.02]" onClick={onPress} onMouseEnter={onPress} onMouseLeave={onPress}>
             <h1 className="font-bold text-lg text-black">{answer.question.question}. {answer.question.title}</h1>
-            {!showAllChoices && <p className="italic font-semibold text-gray-600">{answer.choice.choice} - {answer.choice.label}</p>}
-            {showAllChoices && (
-                <ul>
+            {<p className={cn("italic font-semibold text-gray-600", showAllChoices ? "hidden" : "visible")}>{answer.choice.choice} - {answer.choice.label}</p>}
+            {
+                <ul className={showAllChoices ? "opacity-100" : "opacity-0"}>
                     {answer.question.choices.map((choice) => (
                         <li key={choice.id} className="flex items-center gap-2">
                             <span className={cn("font-semibold text-sm text-gray-600", choice.id === answer.choice.id ? "italic font-bold text-green-800 text-base" : "")}>{choice.choice} - {choice.label}</span>
                         </li>
                     ))}
                 </ul>
-            )}
+            }
         </div>
     )
 }

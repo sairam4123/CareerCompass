@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dotenv import load_dotenv
+from fastapi.responses import StreamingResponse
+import partialjson
 load_dotenv()
 import os
 import uuid
@@ -141,6 +143,7 @@ class Result(Base):
     match_description: Mapped[str] = mapped_column(Text, nullable=False)
     advantages: Mapped[List[str]] = mapped_column(ARRAY(Text), nullable=False)
     disadvantages: Mapped[List[str]] = mapped_column(ARRAY(Text), nullable=False)
+    match: Mapped[List[str]] = mapped_column(ARRAY(Text), nullable=False)
     tags: Mapped[List[str]] = mapped_column(ARRAY(Text), nullable=False)
     createdAt: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
     updatedAt: Mapped[DateTime] = mapped_column(DateTime, default=func.now(), server_onupdate=func.now(), nullable=False)
@@ -194,6 +197,7 @@ class ResultSchema(BaseModel):
     match_description: str | None = None
     description: str | None = None
     tags: list[str] = []
+    match: list[str] = []
 
     class Config:
         from_attributes = True
@@ -318,6 +322,7 @@ Key rules:
     - Provide a score out of 100 based on the user's responses.
     - Provide 3 results for optimal performance.
     - Ensure that the user's responses are taken into account while suggesting a career domain.
+    - Give a list of "match tags" that match the user's responses. (usually 7-8 tags)
 
 Please return the result in the following schema:
 RESULT SCHEMA:
@@ -330,6 +335,7 @@ LANGUAGE: English (en-GB)
         "advantages": ["{tags}", "{tags}", ...],
         "disadvantages": ["{tags}", "{tags}", ...],
         "match_description": "Explain how the users matches with the role with relevant tags",
+        "match": ["{tags}", "{tags}", ...],
         "description": "What is the role and domain about? Explain in about 1-2 lines."
     }
 ]
@@ -515,3 +521,60 @@ def post_feedback(user_id: uuid.UUID, feedback: FeedbackSchema, dbalchemy: Sessi
     dbalchemy.commit()
 
     return {"success": True, 'userId': user.userId}
+
+@app.get("/results/{user_id}/stream")
+def get_result_streaming(user_id: uuid.UUID, dbalchemy: Session = fastapi.Depends(db)):
+    results = dbalchemy.query(Result).filter(Result.userId == user_id).order_by(Result.createdAt.desc(), Result.points.desc()).all()
+    # # results = await dbalchemy.result.find_many(where={"userId": str(user_id)}, take=3, order=[{"createdAt": "desc"}, {"points": "desc"}])
+    if results:
+        return {"success": True, 'userId': user_id, 'results': results}
+    # user = await dbalchemy.profile.find_unique(where={"userId": str(user_id)}, include={"answers": {"include": {"choice": True, "question": True}, "order_by": [{"createdAt": "asc"}]},})
+    user = dbalchemy.query(Profile).filter(Profile.userId == user_id).options(joinedload(Profile.answers).joinedload(Answer.choice), joinedload(Profile.answers).joinedload(Answer.question)).order_by(Answer.createdAt.asc()).first()
+    if not user:
+        return {"success": False, "message": "User not found."}
+    if not user.answers:
+        return {"success": False, "message": "No answers found."}
+    
+    q_with_answers = [f"{answer.question.question}. {answer.question.title}\nAnswer:{answer.choice.label}" for answer in user.answers if answer.question and answer.choice]
+    # last_question = await dbalchemy.question.find_unique(where={"id": user.answers[-1].questionId})
+    last_question = dbalchemy.query(Question).filter(Question.id == user.answers[-1].questionId).first()
+    if not last_question:
+        return {"success": False, "message": "Last question not found."}
+    basic_answers = f"Age Group: {user.ageGroup}\nGender{user.gender}\nEducation: {user.education}"
+    completion = chatbot.generate_content(result_prompt + "\n" + basic_answers + '\nList of Questions and answered so far:' + '\n'.join(q_with_answers) + f'\n({last_question.question}/10)', stream=True)
+    # if not completion or not completion.text:
+    #     return {"success": False, "message": "Failed to generate content."}
+    parser = partialjson.JSONParser()
+    result_text = ""
+    results = [
+        {
+            "id": uuid.uuid4(),
+            "result": "",
+            "points": 0,
+            "tags": [],
+            "advantages": [],
+            "disadvantages": [],
+            "match_description": "",
+            "description": ""
+        } for _ in range(3)
+    ]
+    
+    async def result_generator():
+        nonlocal result_text, results
+        for token in completion:
+            result_text += token.text
+            try:
+                for idx, result in enumerate(parser.parse(result_text)):
+                    results[idx] = results[idx] | result
+                print(results)
+                yield 'data: ' + json.dumps([ResultSchema(result=result['result'] or "", points=result['points'] or 0, advantages=result['advantages'] or [], disadvantages=result['disadvantages'] or [], tags=result['tags'] or [], match_description=result['match_description'] or "", description=result['description'] or "", id=result['id']).model_dump(mode="json") for result in results]) + "\n\n"
+                print("Yielded results...")
+            except json.JSONDecodeError:
+                pass
+
+        results = json.loads(completion.candidates[0].content.parts[0].text)
+        results = [Result(result=result['result'], points=result['points'], advantages=result['advantages'], disadvantages=result['disadvantages'], tags=result['tags'], match_description=result['match_description'], description=result['description'], userId=user_id) for result in results]
+        dbalchemy.add_all(results)
+        dbalchemy.commit()
+
+    return StreamingResponse(result_generator(), media_type='text/event-stream', headers={"Cache-Control": "no-cache", "Connection": "keep-alive"})

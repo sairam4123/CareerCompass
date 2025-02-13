@@ -4,7 +4,6 @@ import Progress from "../components/Progress";
 
 import { QuestionType as QuestionType } from "../@types/Question";
 import Button from "../components/Button";
-import Dropdown from "../components/Dropdown";
 
 export default function Question({
   question,
@@ -56,7 +55,7 @@ export default function Question({
               index={index}
             ></Choice>
           ))}
-          <Dropdown options={question.choices} label_key="label" value_key="choice" onSelect={(v) => setAnswer(v.choice)} />
+          {/* <Dropdown options={question.choices} label_key="label" value_key="choice" onSelect={(v) => setAnswer(v.choice)} /> */}
         </div>
         <div className="w-full flex justify-center gap-4">
           {!disablePrev && (

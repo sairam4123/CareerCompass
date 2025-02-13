@@ -1148,6 +1148,18 @@ files = [
 ]
 
 [[package]]
+name = "partialjson"
+version = "0.1.0"
+description = "Parse incomplete or partial json"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "partialjson-0.1.0-py3-none-any.whl", hash = "sha256:6a8c333b7258b17c5f91765bf8cc27309e496edacb528c62173138974dfe2851"},
+    {file = "partialjson-0.1.0.tar.gz", hash = "sha256:0af7035ed8d0194691d9e015302a462f61a732271e927d81a5a0971ee2fe38fd"},
+]
+
+[[package]]
 name = "prisma"
 version = "0.15.0"
 description = "Prisma Client Python is an auto-generated and fully type-safe database client"
@@ -2256,4 +2268,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "730f4ebeaf949f773a0f0b07578a2dd601821963df2de57b302de1a730fce793"
+content-hash = "c1e3e147de724920f74892f9de0d2aa0bca60437e64ece9c36f47bd6f636530c"

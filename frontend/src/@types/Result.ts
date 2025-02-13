@@ -1,4 +1,5 @@
 export type ResultType = {
+    id: string;
     result: string;
     description: string;
     points: number;

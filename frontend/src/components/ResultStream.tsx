@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ResultType } from "../@types/Result";
 import CircularProgress from "./CircularProgress";
-import { MdFileCopy, MdCancel, MdCheckCircle } from "react-icons/md";
+import { MdFileCopy, MdCancel, MdCheckCircle, MdRecommend } from "react-icons/md";
 import useWindowSize from "../lib/useWindowSize";
 import { api } from "../lib/api";
 import useFetch from "../lib/useFetch";
@@ -79,7 +79,7 @@ const ResultsStream = ({ userId }: {userId: string}) => {
   return (
     <div className="grid sm:grid-cols-1 mt-8 md:grid-cols-2 lg:grid-cols-3 md:flex-row gap-4 md:gap-4">
       {(viewportWidth > 1024 ? bigInMiddle(results) : results).map((result, index) => (
-        <ResultSection index={index} key={result.id} {...result} />
+        <ResultSection index={results.findIndex(v => v.id === result.id)} key={result.id} {...result} />
       ))}
     </div>
   );
@@ -94,6 +94,7 @@ function ResultSection({
     match_description,
     tags,
     index,
+    match
   }: {
     result: string;
     description: string;
@@ -102,7 +103,8 @@ function ResultSection({
     disadvantages: string[];
     match_description: string;
     tags: string[];
-    index: number
+    index: number;
+    match: string[];
   }) {
     console.log(index)
     const copyToClipboard = () => {
@@ -134,8 +136,19 @@ function ResultSection({
           <ul className="">
             {advantages.map((advantage, index) => (
               <li key={index} className="flex-row select-text flex items-center gap-2">
-                <MdCheckCircle color="green" />
+                <MdCheckCircle color="green" size={16} />
                 {advantage}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="">
+          <h2 className="font-bold text-lg">You match</h2>
+          <ul className="">
+            {match.map((match, index) => (
+              <li key={index} className="flex-row select-text text-gray-800 flex items-center gap-2">
+                <MdRecommend color="blue" size={16} />
+                {match}
               </li>
             ))}
           </ul>
@@ -145,7 +158,7 @@ function ResultSection({
           <ul className="">
             {disadvantages.map((disadvantage, index) => (
               <li key={index} className="flex-row select-text text-gray-800 flex items-center gap-2">
-                <MdCancel color="red" />
+                <MdCancel color="red"  size={16} />
                 {disadvantage}
               </li>
             ))}

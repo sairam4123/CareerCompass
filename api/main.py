@@ -317,12 +317,12 @@ Key rules:
     - Suggest a career domain based on the user's responses.
     - Provide a brief description of the role and domain.
     - Mention the advantages and disadvantages of the role.
-    - Provide relevant tags for the role and domain.
+    - Provide relevant tags for the role and domain. (to search for the job in LinkedIn, Naukri, Indeed, etc.) (not how the user matches with the role)
     - Explain how the user matches with the role with relevant tags.
     - Provide a score out of 100 based on the user's responses.
     - Provide 3 results for optimal performance.
     - Ensure that the user's responses are taken into account while suggesting a career domain.
-    - Give a list of "match tags" that match the user's responses. (usually 7-8 tags)
+    - Start with "You enjoy", "You like", "You are interested in", like that..  Give a list of match that represent how the user matches the given role in domain. (usually 4-5 tags) (not the advantages and disadvantages and how to find the job).
 
 Please return the result in the following schema:
 RESULT SCHEMA:
@@ -460,11 +460,14 @@ def post_answer(user_id: uuid.UUID, choice: ChoiceSchema, dbalchemy: Session = f
     return {"success": True, 'userId': user.userId, 'question': question}
 
 @app.get("/result/{user_id}")
-def get_result(user_id: uuid.UUID, dbalchemy: Session = fastapi.Depends(db)):
+def get_result(user_id: uuid.UUID, regenerate: bool = False, dbalchemy: Session = fastapi.Depends(db)):
     results = dbalchemy.query(Result).filter(Result.userId == user_id).order_by(Result.createdAt.desc(), Result.points.desc()).all()
     # results = await dbalchemy.result.find_many(where={"userId": str(user_id)}, take=3, order=[{"createdAt": "desc"}, {"points": "desc"}])
-    if results:
+    if results and not regenerate:
         return {"success": True, 'userId': user_id, 'results': results}
+    if regenerate:
+        dbalchemy.query(Result).filter(Result.userId == user_id).delete()
+        dbalchemy.commit()
     # user = await dbalchemy.profile.find_unique(where={"userId": str(user_id)}, include={"answers": {"include": {"choice": True, "question": True}, "order_by": [{"createdAt": "asc"}]},})
     user = dbalchemy.query(Profile).filter(Profile.userId == user_id).options(joinedload(Profile.answers).joinedload(Answer.choice), joinedload(Profile.answers).joinedload(Answer.question)).order_by(Answer.createdAt.asc()).first()
     if not user:
@@ -482,7 +485,7 @@ def get_result(user_id: uuid.UUID, dbalchemy: Session = fastapi.Depends(db)):
     if not completion or not completion.candidates or not completion.candidates[0].content.parts:
         return {"success": False, "message": "Failed to generate content."}
     results = json.loads(completion.candidates[0].content.parts[0].text)
-    results = [Result(result=result['result'], points=result['points'], advantages=result['advantages'], disadvantages=result['disadvantages'], tags=result['tags'], match_description=result['match_description'], description=result['description'], userId=user_id) for result in results]
+    results = [Result(result=result['result'], points=result['points'], advantages=result['advantages'], disadvantages=result['disadvantages'], tags=result['tags'], match=result['match'], match_description=result['match_description'], description=result['description'], userId=user_id) for result in results]
     dbalchemy.add_all(results)
     dbalchemy.commit()
 
@@ -552,6 +555,7 @@ def get_result_streaming(user_id: uuid.UUID, dbalchemy: Session = fastapi.Depend
             "result": "",
             "points": 0,
             "tags": [],
+            "match": [],
             "advantages": [],
             "disadvantages": [],
             "match_description": "",
@@ -567,7 +571,7 @@ def get_result_streaming(user_id: uuid.UUID, dbalchemy: Session = fastapi.Depend
                 for idx, result in enumerate(parser.parse(result_text)):
                     results[idx] = results[idx] | result
                 print(results)
-                yield 'data: ' + json.dumps([ResultSchema(result=result['result'] or "", points=result['points'] or 0, advantages=result['advantages'] or [], disadvantages=result['disadvantages'] or [], tags=result['tags'] or [], match_description=result['match_description'] or "", description=result['description'] or "", id=result['id']).model_dump(mode="json") for result in results]) + "\n\n"
+                yield 'data: ' + json.dumps([ResultSchema(result=result['result'] or "", points=result['points'] or 0, advantages=result['advantages'] or [], disadvantages=result['disadvantages'] or [], tags=result['tags'] or [], match=result["match"] or [], match_description=result['match_description'] or "", description=result['description'] or "", id=result['id']).model_dump(mode="json") for result in results]) + "\n\n"
                 print("Yielded results...")
             except json.JSONDecodeError:
                 pass

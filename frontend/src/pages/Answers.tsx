@@ -9,8 +9,8 @@ export default function Answers({userId}: {userId?: string | null}) {
     const [openAnswerId, setOpenAnswerId] = useState<string>()
     const {data, loading: isLoading, error} = useFetch<{success: boolean; answers: AnswerType[]}>(`${api}/answers/${userId}`, {enabled: !!userId});
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {isLoading && <Spinner color="normal" size="small" />}
+        <div className={isLoading ? "flex flex-1 items-center justify-center" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"}>
+            {isLoading && <Spinner color="normal" size="normal" />}
             {error && <p className="text-red-500">{error.message}</p>}
             {data && data.success && data.answers.map((answer) => <Answer key={answer.id} onPress={() => {
                 setOpenAnswerId(answer.id === openAnswerId ? "" : answer.id)

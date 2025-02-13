@@ -6,19 +6,23 @@ import useWindowSize from "../lib/useWindowSize";
 import { api } from "../lib/api";
 import useFetch from "../lib/useFetch";
 import { toast } from "react-toastify";
+import Spinner from "./Spinner";
 
 const ResultsStream = ({ userId }: {userId: string}) => {
   const [results, setResults] = useState<ResultType[]>([]);
   const [isStreaming, setIsStreaming] = useState<boolean>(true);
+  const [isLoadingStream, setIsLoadingStream] = useState<boolean>(false);
   useEffect(() => {
     const eventSource = new EventSource(`${api}/results/${userId}/stream`);
     eventSource.onopen = () => {
         console.log("Event source opened.")
         toast.warn("[FLICKER WARNING] Streaming results.. please look away if you have epilepsy.")
         setIsStreaming(true);
+        setIsLoadingStream(true);
     }
     eventSource.onmessage = (event) => {
       console.log(event, "Event source message.")
+      setIsLoadingStream(false);
       try {
         const newResults = JSON.parse(event.data) as ResultType[];
 
@@ -45,7 +49,9 @@ const ResultsStream = ({ userId }: {userId: string}) => {
     eventSource.onerror = (e) => {
       console.error("Error with event stream.");
       console.log(e)
-      toast.error("Error with event stream. Please try again later.");
+      if (e.eventPhase !== EventSource.CLOSED) {
+        toast.error("Error with event stream. Please try again later.");
+      }
       eventSource.close();
         setIsStreaming(false);
     };
@@ -78,6 +84,7 @@ const ResultsStream = ({ userId }: {userId: string}) => {
   
   return (
     <div className="grid sm:grid-cols-1 mt-8 md:grid-cols-2 lg:grid-cols-3 md:flex-row gap-4 md:gap-4">
+      {isLoadingStream && <div className="flex flex-col items-center justify-center gap-2"><Spinner color="normal" size="large" /><p className="text-center">Our mascots are at work figuring your career for you!</p></div>}
       {(viewportWidth > 1024 ? bigInMiddle(results) : results).map((result) => (
         <ResultSection index={results.findIndex(v => v.id === result.id)} key={result.id} {...result} />
       ))}

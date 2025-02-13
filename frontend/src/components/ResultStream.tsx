@@ -5,6 +5,7 @@ import { MdFileCopy, MdCancel, MdCheckCircle } from "react-icons/md";
 import useWindowSize from "../lib/useWindowSize";
 import { api } from "../lib/api";
 import useFetch from "../lib/useFetch";
+import { toast } from "react-toastify";
 
 const ResultsStream = ({ userId }: {userId: string}) => {
   const [results, setResults] = useState<ResultType[]>([]);
@@ -13,10 +14,11 @@ const ResultsStream = ({ userId }: {userId: string}) => {
     const eventSource = new EventSource(`${api}/results/${userId}/stream`);
     eventSource.onopen = () => {
         console.log("Event source opened.")
+        toast.warn("[FLICKER WARNING] Streaming results.. please look away if you have epilepsy.")
         setIsStreaming(true);
     }
     eventSource.onmessage = (event) => {
-    console.log(event, "Event source message.")
+      console.log(event, "Event source message.")
       try {
         const newResults = JSON.parse(event.data) as ResultType[];
 
@@ -36,12 +38,14 @@ const ResultsStream = ({ userId }: {userId: string}) => {
         console.error("Error parsing stream data:", error);
         eventSource.close();
         setIsStreaming(false);
+        toast.error("Error parsing stream data. Please try again later.");
       }
     };
 
     eventSource.onerror = (e) => {
       console.error("Error with event stream.");
       console.log(e)
+      toast.error("Error with event stream. Please try again later.");
       eventSource.close();
         setIsStreaming(false);
     };

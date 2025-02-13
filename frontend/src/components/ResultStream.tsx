@@ -85,6 +85,8 @@ const ResultsStream = ({ userId }: {userId: string}) => {
   return (
     <div className="grid sm:grid-cols-1 mt-8 md:grid-cols-2 lg:grid-cols-3 md:flex-row gap-4 md:gap-4">
       {isLoadingStream && <div className="flex flex-col items-center justify-center gap-2"><Spinner color="normal" size="large" /><p className="text-center">Our mascots are at work figuring your career for you!</p></div>}
+      {loading && <div className="flex flex-col items-center justify-center gap-2"><Spinner color="normal" size="large" /><p className="text-center">Our mascots are at work figuring your career for you!</p></div>}
+      {error && <p className="text-red-500 p-2">{error.message}</p>}
       {(viewportWidth > 1024 ? bigInMiddle(results) : results).map((result) => (
         <ResultSection index={results.findIndex(v => v.id === result.id)} key={result.id} {...result} />
       ))}

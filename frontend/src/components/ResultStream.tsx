@@ -78,7 +78,7 @@ const ResultsStream = ({ userId }: {userId: string}) => {
   
   return (
     <div className="grid sm:grid-cols-1 mt-8 md:grid-cols-2 lg:grid-cols-3 md:flex-row gap-4 md:gap-4">
-      {(viewportWidth > 1024 ? bigInMiddle(results) : results).map((result, index) => (
+      {(viewportWidth > 1024 ? bigInMiddle(results) : results).map((result) => (
         <ResultSection index={results.findIndex(v => v.id === result.id)} key={result.id} {...result} />
       ))}
     </div>

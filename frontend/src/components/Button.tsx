@@ -16,7 +16,7 @@ export default function Button({
   children?: React.ReactNode;
   isLoading?: boolean;
   disabled?: boolean;
-  text: string;
+  text?: string;
   icon?: React.ReactNode;
 }) {
     const defaultClassName = "flex items-center gap-4 justify-center bg-dark flex-row text-white p-2 rounded-lg mt-4 transition-all min-w-fit w-full md:w-2/4 lg:w-2/5 xl:w-1/6 hover:md:w-3/4 hover:lg:w-3/5 hover:xl:w-1/4 hover:bg-light-dark";

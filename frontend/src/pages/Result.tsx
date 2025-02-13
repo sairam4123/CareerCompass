@@ -70,6 +70,7 @@ export default function Result({ userId: defaultUserId, shared = false }: { user
                 disadvantages={result.disadvantages}
                 match_description={result.match_description}
                 tags={result.tags}
+                index={data.results.findIndex((v) => v.result === result.result)}
               />
             ))}
           </div>
@@ -124,7 +125,8 @@ function ResultSection({
   advantages,
   disadvantages,
   match_description,
-  tags
+  tags,
+  index,
 }: {
   result: string;
   description: string;
@@ -132,13 +134,15 @@ function ResultSection({
   advantages: string[];
   disadvantages: string[];
   match_description: string;
-  tags: string[]
+  tags: string[];
+  index: number
 }) {
+  console.log(index)
   const copyToClipboard = () => {
     navigator.clipboard.writeText(JSON.stringify({ result, description, points, advantages, disadvantages, match_description }));
   }
   return (
-    <section className="relative group grid mx-2 border bg-gradient-to-b from-white via-zinc-100 hover:shadow-xl hover:shadow-black/50 to-zinc-50 hover:scale-105 transition-all shadow-lg rounded-md py-3 px-3 mt-4 gap-6">
+    <section className="relative group grid mx-2 border bg-gradient-to-b from-white via-zinc-100 hover:shadow-xl hover:shadow-black/50 to-zinc-50 hover:scale-105 transition-all animate-flip-in duration-100 shadow-lg rounded-md py-3 px-3 mt-4 gap-6" style={{animationFillMode: "backwards", perspective: "1000px", transformStyle: "preserve-3d", animationDelay: `${Number(index * 0.5)}s`}}>
         <div onClick={() => {copyToClipboard()}} className="absolute cursor-pointer group-hover:opacity-100 hover:bg-extra-light/50 justify-center items-center text-xs opacity-0 top-0 flex gap-1 transition-all flex-row right-0 p-2 bg-extra-light rounded-bl-md rounded-tr-md text-gray-800">
             <MdFileCopy size={14} /> Copy
         </div>

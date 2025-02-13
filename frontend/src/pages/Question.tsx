@@ -49,10 +49,11 @@ export default function Question({
               onPress={() => {
                 setAnswer(choice.choice);
               }}
-              key={index}
+              key={`${question.id}${index}`}
               value={choice.label}
               checked={answer === choice.choice}
               groupName={`question${question.question}`}
+              index={index}
             ></Choice>
           ))}
           <Dropdown options={question.choices} label_key="label" value_key="choice" onSelect={(v) => setAnswer(v.choice)} />

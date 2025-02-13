@@ -577,7 +577,7 @@ def get_result_streaming(user_id: uuid.UUID, dbalchemy: Session = fastapi.Depend
                 pass
 
         results = json.loads(completion.candidates[0].content.parts[0].text)
-        results = [Result(result=result['result'], points=result['points'], advantages=result['advantages'], disadvantages=result['disadvantages'], tags=result['tags'], match_description=result['match_description'], description=result['description'], userId=user_id) for result in results]
+        results = [Result(result=result['result'], points=result['points'], advantages=result['advantages'], disadvantages=result['disadvantages'], tags=result['tags'], match=result["match"], match_description=result['match_description'], description=result['description'], userId=user_id) for result in results]
         dbalchemy.add_all(results)
         dbalchemy.commit()
 

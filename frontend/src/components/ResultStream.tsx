@@ -145,7 +145,7 @@ function ResultSection({
         <div className="">
           <h2 className="font-bold text-lg">You match</h2>
           <ul className="">
-            {match.map((match, index) => (
+            {match?.map((match, index) => (
               <li key={index} className="flex-row select-text text-gray-800 flex items-center gap-2">
                 <MdRecommend color="blue" size={16} />
                 {match}

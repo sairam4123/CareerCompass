@@ -8,12 +8,13 @@ import useFetch from "../lib/useFetch";
 import { toast } from "react-toastify";
 import Spinner from "./Spinner";
 
-const ResultsStream = ({ userId }: {userId: string}) => {
+const ResultsStream = ({ userId, regenerate }: {userId: string; regenerate: boolean}) => {
   const [results, setResults] = useState<ResultType[]>([]);
   const [isStreaming, setIsStreaming] = useState<boolean>(true);
   const [isLoadingStream, setIsLoadingStream] = useState<boolean>(false);
+
   useEffect(() => {
-    const eventSource = new EventSource(`${api}/results/${userId}/stream`);
+    const eventSource = new EventSource(`${api}/results/${userId}/stream?regenerate=${regenerate}`);
     eventSource.onopen = () => {
         console.log("Event source opened.")
         toast.warn("[FLICKER WARNING] Streaming results.. please look away if you have epilepsy.")
@@ -53,7 +54,7 @@ const ResultsStream = ({ userId }: {userId: string}) => {
         toast.error("Error with event stream. Please try again later.");
       }
       eventSource.close();
-        setIsStreaming(false);
+      setIsStreaming(false);
     };
 
     return () => eventSource.close();
@@ -63,7 +64,8 @@ const ResultsStream = ({ userId }: {userId: string}) => {
 
     useEffect(() => {
         if (loadedResults && !loading && !error && !isStreaming && userId) {
-        setResults(loadedResults.results);
+          console.log("Overrriding results with loaded results.")
+          setResults(loadedResults.results);
         }
     }, [userId, isStreaming, loadedResults, loading, error])
 
@@ -85,7 +87,7 @@ const ResultsStream = ({ userId }: {userId: string}) => {
   return (
     <div className="grid sm:grid-cols-1 mt-8 md:grid-cols-2 lg:grid-cols-3 md:flex-row gap-4 md:gap-4">
       {isLoadingStream && <div className="flex flex-col items-center justify-center gap-2"><Spinner color="normal" size="large" /><p className="text-center">Our mascots are at work figuring your career for you!</p></div>}
-      {loading && <div className="flex flex-col items-center justify-center gap-2"><Spinner color="normal" size="large" /><p className="text-center">Our mascots are at work figuring your career for you!</p></div>}
+      {(loading || !results) && <div className="flex flex-col items-center justify-center gap-2"><Spinner color="normal" size="large" /><p className="text-center">Our mascots are at work figuring your career for you!</p></div>}
       {error && <p className="text-red-500 p-2">{error.message}</p>}
       {(viewportWidth > 1024 ? bigInMiddle(results) : results).map((result) => (
         <ResultSection index={results.findIndex(v => v.id === result.id)} key={result.id} {...result} />

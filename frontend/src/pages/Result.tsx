@@ -1,6 +1,6 @@
 import { MdAutorenew, MdShare } from "react-icons/md";
 import Spinner from "../components/Spinner";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import Button from "../components/Button";
 import { Bounce, toast, ToastContainer } from "react-toastify";
 import FeedbackForm from "../forms/FeedbackForm";
@@ -10,6 +10,8 @@ import ResultsStream from "../components/ResultStream";
 
 export default function Result({ userId: defaultUserId, shared = false }: { userId?: string | null; shared?: boolean }) {
   const { userId: paramUserId } = useParams();
+  const [searchParams] = useSearchParams();
+  const regenerate = (searchParams.get("regenerate")?.toLowerCase() === "true");
   const navigate = useNavigate();
   const userId = defaultUserId ?? paramUserId;
 
@@ -38,7 +40,7 @@ export default function Result({ userId: defaultUserId, shared = false }: { user
             </p>
           </div>
         )}
-        { userId && <ResultsStream userId={userId} />}
+        { userId && <ResultsStream regenerate={regenerate} userId={userId} />}
         { userId && !shared && <div className="flex flex-col gap-4 mt-8">
           <h1 className="text-center font-bold text-4xl">Your Answers</h1>
           <Answers userId={userId} />

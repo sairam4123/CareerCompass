@@ -380,7 +380,6 @@ def post_basic_answers(basic_answer: BasicAnswers, dbalchemy: Session = fastapi.
     profile.maxQuestion = max_questions
 
     if questions[0].get('question') is None:
-
         return {"success": False, "message": "Question failed to generate."}
     
     question = Question(**{
@@ -526,11 +525,16 @@ def post_feedback(user_id: uuid.UUID, feedback: FeedbackSchema, dbalchemy: Sessi
     return {"success": True, 'userId': user.userId}
 
 @app.get("/results/{user_id}/stream")
-def get_result_streaming(user_id: uuid.UUID, dbalchemy: Session = fastapi.Depends(db)):
+def get_result_streaming(user_id: uuid.UUID, regenerate: bool = False, dbalchemy: Session = fastapi.Depends(db)):
+    print("Regenerating results...", regenerate)
     results = dbalchemy.query(Result).filter(Result.userId == user_id).order_by(Result.createdAt.desc(), Result.points.desc()).all()
     # # results = await dbalchemy.result.find_many(where={"userId": str(user_id)}, take=3, order=[{"createdAt": "desc"}, {"points": "desc"}])
-    if results:
+    if results and not regenerate:
         return {"success": True, 'userId': user_id, 'results': results}
+    if regenerate:
+        # await dbalchemy.result.delete_many(where={"userId": str(user_id)})
+        dbalchemy.query(Result).filter(Result.userId == user_id).delete()
+        dbalchemy.commit()
     # user = await dbalchemy.profile.find_unique(where={"userId": str(user_id)}, include={"answers": {"include": {"choice": True, "question": True}, "order_by": [{"createdAt": "asc"}]},})
     user = dbalchemy.query(Profile).filter(Profile.userId == user_id).options(joinedload(Profile.answers).joinedload(Answer.choice), joinedload(Profile.answers).joinedload(Answer.question)).order_by(Answer.createdAt.asc()).first()
     if not user:
@@ -540,13 +544,13 @@ def get_result_streaming(user_id: uuid.UUID, dbalchemy: Session = fastapi.Depend
     
     q_with_answers = [f"{answer.question.question}. {answer.question.title}\nAnswer:{answer.choice.label}" for answer in user.answers if answer.question and answer.choice]
     # last_question = await dbalchemy.question.find_unique(where={"id": user.answers[-1].questionId})
-    last_question = dbalchemy.query(Question).filter(Question.id == user.answers[-1].questionId).first()
-    if not last_question:
-        return {"success": False, "message": "Last question not found."}
+    # last_question = dbalchemy.query(Question).filter(Question.id == user.answers[-1].questionId).first()
+    # if not last_question:
+    #     return {"success": False, "message": "Last question not found."}
     basic_answers = f"Age Group: {user.ageGroup}\nGender{user.gender}\nEducation: {user.education}"
-    completion = chatbot.generate_content(result_prompt + "\n" + basic_answers + '\nList of Questions and answered so far:' + '\n'.join(q_with_answers) + f'\n({last_question.question}/10)', stream=True)
-    # if not completion or not completion.text:
-    #     return {"success": False, "message": "Failed to generate content."}
+    completion = chatbot.generate_content(result_prompt + "\n" + basic_answers + '\nList of Questions and answered so far:' + '\n'.join(q_with_answers), stream=True)
+    if not completion:
+        return {"success": False, "message": "Failed to generate content."}
     parser = partialjson.JSONParser()
     result_text = ""
     results = [
@@ -570,13 +574,13 @@ def get_result_streaming(user_id: uuid.UUID, dbalchemy: Session = fastapi.Depend
             try:
                 for idx, result in enumerate(parser.parse(result_text)):
                     results[idx] = results[idx] | result
-                print(results)
+                # print(results)
                 yield 'data: ' + json.dumps([ResultSchema(result=result['result'] or "", points=result['points'] or 0, advantages=result['advantages'] or [], disadvantages=result['disadvantages'] or [], tags=result['tags'] or [], match=result["match"] or [], match_description=result['match_description'] or "", description=result['description'] or "", id=result['id']).model_dump(mode="json") for result in results]) + "\n\n"
-                print("Yielded results...")
+                # print("Yielded results...")
             except json.JSONDecodeError:
                 pass
 
-        results = json.loads(completion.candidates[0].content.parts[0].text)
+        results = json.loads(completion.text)
         results = [Result(result=result['result'], points=result['points'], advantages=result['advantages'], disadvantages=result['disadvantages'], tags=result['tags'], match=result["match"], match_description=result['match_description'], description=result['description'], userId=user_id) for result in results]
         dbalchemy.add_all(results)
         dbalchemy.commit()

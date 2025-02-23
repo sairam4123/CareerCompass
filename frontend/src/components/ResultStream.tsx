@@ -11,7 +11,7 @@ import Spinner from "./Spinner";
 const ResultsStream = ({ userId, regenerate }: {userId: string; regenerate: boolean}) => {
   const [results, setResults] = useState<ResultType[]>([]);
   const [isStreaming, setIsStreaming] = useState<boolean>(true);
-  const [isLoadingStream, setIsLoadingStream] = useState<boolean>(false);
+  const [isLoadingStream, setIsLoadingStream] = useState<boolean>(true);
 
   useEffect(() => {
     const eventSource = new EventSource(`${api}/results/${userId}/stream?regenerate=${regenerate}`);
@@ -55,6 +55,7 @@ const ResultsStream = ({ userId, regenerate }: {userId: string; regenerate: bool
       }
       eventSource.close();
       setIsStreaming(false);
+      setIsLoadingStream(false);
     };
 
     return () => eventSource.close();
@@ -85,13 +86,15 @@ const ResultsStream = ({ userId, regenerate }: {userId: string; regenerate: bool
     const { width: viewportWidth} = useWindowSize();
   
   return (
-    <div className="grid sm:grid-cols-1 mt-8 md:grid-cols-2 lg:grid-cols-3 md:flex-row gap-4 md:gap-4">
-      {isLoadingStream && <div className="flex flex-col items-center justify-center gap-2"><Spinner color="normal" size="large" /><p className="text-center">Our mascots are at work figuring your career for you!</p></div>}
-      {(loading || !results) && <div className="flex flex-col items-center justify-center gap-2"><Spinner color="normal" size="large" /><p className="text-center">Our mascots are at work figuring your career for you!</p></div>}
+    <div className="flex flex-col justify-center items-center flex-1 gap-4">
+      {isLoadingStream && <div className="flex flex-col mt-8 items-center justify-center gap-2"><Spinner color="normal" size="large" /><p className="text-center">Our mascots are at work figuring your career for you!</p></div>}
+      {(loading || !results) && <div className="flex flex-col mt-8 items-center justify-center gap-2"><Spinner color="normal" size="large" /><p className="text-center">Our mascots are at work figuring your career for you!</p></div>}
       {error && <p className="text-red-500 p-2">{error.message}</p>}
+      <div className="grid sm:grid-cols-1 mt-8 md:grid-cols-2 lg:grid-cols-3 md:flex-row gap-4 md:gap-4">
       {(viewportWidth > 1024 ? bigInMiddle(results) : results).map((result) => (
         <ResultSection index={results.findIndex(v => v.id === result.id)} key={result.id} {...result} />
       ))}
+      </div>
     </div>
   );
 };

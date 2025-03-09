@@ -52,6 +52,7 @@ export default function Question({
               }}
               key={`${question.id}${index}`}
               value={choice.label}
+              startingDelay={0.2}
               checked={answer === choice.choice}
               groupName={`question${question.question}`}
               index={index}

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import asyncio
 
 from dotenv import load_dotenv
 from fastapi.responses import StreamingResponse
@@ -577,6 +578,7 @@ def get_result_streaming(user_id: uuid.UUID, regenerate: bool = False, dbalchemy
                 # print(results)
                 yield 'data: ' + json.dumps([ResultSchema(result=result['result'] or "", points=result['points'] or 0, advantages=result['advantages'] or [], disadvantages=result['disadvantages'] or [], tags=result['tags'] or [], match=result["match"] or [], match_description=result['match_description'] or "", description=result['description'] or "", id=result['id']).model_dump(mode="json") for result in results]) + "\n\n"
                 # print("Yielded results...")
+                await asyncio.sleep(0.3)
             except json.JSONDecodeError:
                 pass
 

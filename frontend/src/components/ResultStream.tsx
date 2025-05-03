@@ -48,7 +48,7 @@ const ResultsStream = ({ userId, regenerate }: {userId: string; regenerate: bool
       }
     });
 
-    eventSource.addEventListener("complete", (event) => {
+    eventSource.addEventListener("complete", (_) => {
       console.log("Event source complete.")
       setIsStreaming(false);
       setIsLoadingStream(false);

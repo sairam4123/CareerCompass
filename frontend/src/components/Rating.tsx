@@ -66,11 +66,11 @@ export default function Ratings({ maxValue = 5, value = 0, onChange }: {
     return (
       <div className="flex gap-1" onMouseLeave={handleMouseLeave}>
         {[...Array(fullStars)].map((_, i) => (
-          <BsStarFill key={i} fill="currentColor" className={`w-6 h-6 cursor-pointer ${(hoverRating > i) ? "text-yellow-300" : "text-yellow-500"}`} onClick={(e) => handleClick(i, e)} onMouseMove={(e) => handleMouseMove(i, e)} />
+          <BsStarFill key={i} fill="currentColor" className={`w-6 h-6 transition-all cursor-pointer ${(hoverRating > i) ? "text-yellow-300" : "text-yellow-500"}`} onClick={(e) => handleClick(i, e)} onMouseMove={(e) => handleMouseMove(i, e)} />
         ))}
-        {hasHalfStar && <BsStarHalf fill="currentColor" className={`w-6 h-6 cursor-pointer ${(hoverRating > fullStars) ? "text-yellow-300" : "text-yellow-500"}`} onClick={(e) => handleClick(fullStars, e)} onMouseMove={(e) => handleMouseMove(fullStars, e)} />}
+        {hasHalfStar && <BsStarHalf fill="currentColor" className={`w-6 h-6 transition-all cursor-pointer ${(hoverRating > fullStars) ? "text-yellow-300" : "text-yellow-500"}`} onClick={(e) => handleClick(fullStars, e)} onMouseMove={(e) => handleMouseMove(fullStars, e)} />}
         {[...Array(emptyStars)].map((_, i) => (
-          <BsStar key={i + fullStars + 1} className={`w-6 h-6 cursor-pointer ${(hoverRating > i + fullStars + 1) ? "text-yellow-300" : "text-yellow-500"}`} onClick={(e) => handleClick(i + fullStars, e)} onMouseMove={(e) => handleMouseMove(i + fullStars, e)} />
+          <BsStar key={i + fullStars + 1} className={`w-6 h-6 cursor-pointer transition-all ${(hoverRating > i + fullStars + 1) ? "text-yellow-300" : "text-yellow-500"}`} onClick={(e) => handleClick(i + fullStars, e)} onMouseMove={(e) => handleMouseMove(i + fullStars, e)} />
         ))}
       </div>
     );

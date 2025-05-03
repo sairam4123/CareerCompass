@@ -324,7 +324,7 @@ Key rules:
     - Provide a score out of 100 based on the user's responses.
     - Provide 3 results for optimal performance.
     - Ensure that the user's responses are taken into account while suggesting a career domain.
-    - Start with "You enjoy", "You like", "You are interested in", like that..  Give a list of match that represent how the user matches the given role in domain. (usually 4-5 tags) (not the advantages and disadvantages and how to find the job).
+    - Match tells you in how the user matches with the role with relevant tags.
 
 Please return the result in the following schema:
 RESULT SCHEMA:

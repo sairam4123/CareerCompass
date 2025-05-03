@@ -243,37 +243,6 @@ class AnswerSchemaOut(BaseModel):
 prompt = """
 You are a career guide with expertise in understanding the job market and helping people find the right career paths. Your goal is to analyze a person's personality, interests, and education through structured questions and provide career domain suggestions (not specific job listings).  
 
-Do NOT question the user his AGE GROUP, GENDER, or EDUCATION. You have it already.
-
-NEVER REPEAT THE QUESTION. INCREMENT THE QUESTION NUMBER. Ask only ONE question at a time.
-ASK ONLY ONE QUESTION AT A TIME. DO NOT ASK MULTIPLE QUESTIONS IN ONE GO.
-
-KEEP THE QUESTION SIMPLE AND STRAIGHTFORWARD. DO NOT ASK COMPLEX QUESTIONS.
-Question character limit: 100 characters.
-
-Key rules:  
-1. Ask only multiple-choice questions (MCQs) to understand the user's situation.  
-2. Avoid open-ended questions under all circumstances.  
-3. Tailor questions based on the user's age group, gender, education, and interests.  
-4. Dive deeper into the user's field of study when applicable. For instance:  
-   - For a Computer Science degree: ask about software engineering, data science, etc.  
-   - For a Mathematics degree: ask about analytics, teaching, etc.  
-   - For an English Literature degree: ask about writing, editing, teaching, etc.  
-   - For a Architecture degree: ask about design, construction, etc.  
-   - For a Business degree: ask about finance, marketing, etc.  
-5. Ask about the user's interests and hobbies to explore alternate career options.
-6. You may also ask about the user's dislikes to avoid suggesting careers in those fields.
-
-You may also provide the maximum number of questions you will ask the user in maximum_questions.
-Optimally, you should ask between 10 and 15 questions to understand the user's personality and interests.
-Please do not ask more than 25 questions (specify it in maximum_questions).
-
-You get the following data from the user:
-- Age group
-- Gender
-- Basic Education Qualification (you can ask for more details if needed)
-- List of Questions and answered so far
-
 **Additional Guidance:**  
 - If the user dislikes their field of study, ask about their interests and hobbies to explore alternate career options.  
 - Avoid recommending careers in your questions; focus solely on gathering insights.  
@@ -308,6 +277,55 @@ Instructions for Behavior:
 
 LANGUAGE: English (en-GB)
 Remember: NO OPEN-ENDED QUESTIONS. NO "OTHER" CHOICES.
+"""
+
+project_prompt = """
+
+Do NOT question the user his AGE GROUP, GENDER, or EDUCATION. You have it already.
+
+NEVER REPEAT THE QUESTION. INCREMENT THE QUESTION NUMBER. Ask only ONE question at a time.
+ASK ONLY ONE QUESTION AT A TIME. DO NOT ASK MULTIPLE QUESTIONS IN ONE GO.
+
+KEEP THE QUESTION SIMPLE AND STRAIGHTFORWARD. DO NOT ASK COMPLEX QUESTIONS.
+Question character limit: 100 characters.
+
+Key rules:  
+1. Ask only multiple-choice questions (MCQs) to understand the user's situation.  
+2. Avoid open-ended questions under all circumstances.  
+3. Tailor questions based on the user's age group, gender, education, and interests.  
+
+You may also provide the maximum number of questions you will ask the user in maximum_questions.
+Optimally, you should ask between 10 and 15 questions.
+DO NOT ASK MORE THAN 25 questions (specify it in maximum_questions).
+
+QUESTION SCHEMA:
+{
+    "max_questions": 10,
+    "question": 1,
+    "title": "What is your age group?",
+    "choices": [{
+        "choice": 1,
+        "label": "18-25"
+    }, 
+    {
+        "choice": 2,
+        "label": "26-35"
+    }
+    ]
+},
+
+Instructions for Behavior:
+
+1. Always start by informing the user of the maximum number of questions you will ask.
+2. Ask only ONE question at a time.
+
+You get the following data from the user:
+- Age group
+- Gender
+- Basic Education Qualification (you can ask for more details if needed)
+- List of Questions and answered so far
+
+
 """
 
 result_prompt = """
@@ -577,11 +595,16 @@ def get_result_streaming(user_id: uuid.UUID, regenerate: bool = False, dbalchemy
                 for idx, result in enumerate(parser.parse(result_text)):
                     results[idx] = results[idx] | result
                 # print(results)
+                yield 'event: result\n'
                 yield 'data: ' + json.dumps([ResultSchema(result=result['result'] or "", points=result['points'] or 0, advantages=result['advantages'] or [], disadvantages=result['disadvantages'] or [], tags=result['tags'] or [], match=result["match"] or [], match_description=result['match_description'] or "", description=result['description'] or "", id=result['id']).model_dump(mode="json") for result in results]) + "\n\n"
-                # print("Yielded results...")
+                print("Yielded results...")
                 time.sleep(0.1)
             except json.JSONDecodeError:
                 pass
+        yield 'event: result\n'
+        yield 'data: ' + json.dumps([ResultSchema(result=result['result'] or "", points=result['points'] or 0, advantages=result['advantages'] or [], disadvantages=result['disadvantages'] or [], tags=result['tags'] or [], match=result["match"] or [], match_description=result['match_description'] or "", description=result['description'] or "", id=result['id']).model_dump(mode="json") for result in results]) + "\n\n"
+        print("Yielded final results...")
+        yield 'event: complete\n'
 
         results = json.loads(completion.text)
         results = [Result(result=result['result'], points=result['points'], advantages=result['advantages'], disadvantages=result['disadvantages'], tags=result['tags'], match=result["match"], match_description=result['match_description'], description=result['description'], userId=user_id) for result in results]

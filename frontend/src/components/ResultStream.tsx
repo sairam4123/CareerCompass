@@ -12,6 +12,7 @@ const ResultsStream = ({ userId, regenerate }: {userId: string; regenerate: bool
   const [results, setResults] = useState<ResultType[]>([]);
   const [isStreaming, setIsStreaming] = useState<boolean>(true);
   const [isLoadingStream, setIsLoadingStream] = useState<boolean>(true);
+  const [isStreamComplete, setIsStreamComplete] = useState<boolean>(false);
 
   useEffect(() => {
     const eventSource = new EventSource(`${api}/results/${userId}/stream?regenerate=${regenerate}`);
@@ -21,7 +22,7 @@ const ResultsStream = ({ userId, regenerate }: {userId: string; regenerate: bool
         setIsStreaming(true);
         setIsLoadingStream(true);
     }
-    eventSource.onmessage = (event) => {
+    eventSource.addEventListener("result", (event) => {
       console.log(event, "Event source message.")
       setIsLoadingStream(false);
       try {
@@ -45,11 +46,18 @@ const ResultsStream = ({ userId, regenerate }: {userId: string; regenerate: bool
         setIsStreaming(false);
         toast.error("Error parsing stream data. Please try again later.");
       }
-    };
+    });
+
+    eventSource.addEventListener("complete", (event) => {
+      console.log("Event source complete.")
+      setIsStreaming(false);
+      setIsLoadingStream(false);
+      eventSource.close();
+      setIsStreamComplete(true);
+      toast.success("Results stream complete!")
+    })
 
     eventSource.onerror = (e) => {
-      console.error("Error with event stream.");
-      console.log(e)
       if (e.eventPhase !== EventSource.CLOSED) {
         toast.error("Error with event stream. Please try again later.");
       }
@@ -61,14 +69,14 @@ const ResultsStream = ({ userId, regenerate }: {userId: string; regenerate: bool
     return () => eventSource.close();
   }, [userId]);
 
-    const {data: loadedResults, error, loading} = useFetch<{ results: ResultType[] }>(`${api}/results/${userId}/stream`, { enabled: !!userId && !isStreaming });
+    const {data: loadedResults, error, loading} = useFetch<{ results: ResultType[] }>(`${api}/results/${userId}/stream`, { enabled: !!userId && !isStreaming && !isStreamComplete});
 
     useEffect(() => {
-        if (loadedResults && !loading && !error && !isStreaming && userId) {
+        if (loadedResults && !loading && !error && !isStreamComplete && !isStreaming && userId) {
           console.log("Overrriding results with loaded results.")
           setResults(loadedResults.results);
         }
-    }, [userId, isStreaming, loadedResults, loading, error])
+    }, [userId, isStreaming, loadedResults, isStreamComplete, loading, error])
 
 
   
@@ -125,7 +133,7 @@ function ResultSection({
       navigator.clipboard.writeText(JSON.stringify({ result, description, points, advantages, disadvantages, match_description }));
     }
     return (
-      <section className="relative select-none group grid mx-2 border bg-gradient-to-b from-white via-zinc-100 hover:shadow-xl hover:shadow-black/50 to-zinc-50 hover:scale-105 transition-all animate-flip-in duration-100 shadow-lg rounded-md py-3 px-3 mt-4 gap-6" style={{animationFillMode: "backwards", perspective: "1000px", transformStyle: "preserve-3d", animationDelay: `${Number(index * 0.5)}s`}}>
+      <section key={index} className="relative select-none group grid mx-2 border bg-gradient-to-b from-white via-zinc-100 hover:shadow-xl hover:shadow-black/50 to-zinc-50 hover:scale-105 transition-all animate-flip-in duration-100 shadow-lg rounded-md py-3 px-3 mt-4 gap-6" style={{animationFillMode: "backwards", perspective: "1000px", transformStyle: "preserve-3d", animationDelay: `${Number(index * 0.5)}s`}}>
           <div onClick={() => {copyToClipboard()}} className="absolute cursor-pointer group-hover:opacity-100 hover:bg-extra-light/50 justify-center items-center text-xs opacity-0 top-0 flex gap-1 transition-all flex-row right-0 p-2 bg-extra-light rounded-bl-md rounded-tr-md text-gray-800">
               <MdFileCopy size={14} /> Copy
           </div>
